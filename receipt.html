@@ -127,42 +127,90 @@
     <div class="receipt-footer">
         <p>Thank you for your business!</p>
         <p>Visit again</p>
+        <button id="print-btn" style="margin-top: 10px; padding: 5px 10px;" onclick="window.print()">Print Receipt</button>
     </div>
     
     <script>
-        // This script would be called from the sales screen to populate receipt data
+        // This script populates receipt data from localStorage
         function populateReceipt(invoiceData) {
-            document.getElementById('invoice-number').textContent = invoiceData.invoice_number;
-            document.getElementById('invoice-date').textContent = new Date(invoiceData.invoice_date).toLocaleDateString();
-            document.getElementById('customer-name').textContent = invoiceData.customer_name || 'Walk-in Customer';
-            
-            const itemsBody = document.getElementById('receipt-items');
-            itemsBody.innerHTML = '';
-            
-            let totalAmount = 0;
-            
-            invoiceData.items.forEach(item => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${item.name}</td>
-                    <td>${item.quantity}</td>
-                    <td class="text-right">₹${item.rate_at_sale.toFixed(2)}</td>
-                    <td class="text-right">₹${item.total_line_amount.toFixed(2)}</td>
-                `;
-                itemsBody.appendChild(row);
+            try {
+                document.getElementById('invoice-number').textContent = invoiceData.invoice_number;
+                document.getElementById('invoice-date').textContent = new Date(invoiceData.invoice_date).toLocaleDateString();
+                document.getElementById('customer-name').textContent = invoiceData.customer_name || 'Walk-in Customer';
                 
-                totalAmount += item.total_line_amount;
-            });
-            
-            document.getElementById('total-amount').textContent = `₹${totalAmount.toFixed(2)}`;
-            document.getElementById('total-gst').textContent = `₹${invoiceData.total_gst.toFixed(2)}`;
-            document.getElementById('grand-total').textContent = `₹${invoiceData.total_amount.toFixed(2)}`;
+                const itemsBody = document.getElementById('receipt-items');
+                itemsBody.innerHTML = '';
+                
+                let totalAmount = 0;
+                
+                // Handle items (could be array or JSON string)
+                let items = [];
+                if (Array.isArray(invoiceData.items)) {
+                    items = invoiceData.items;
+                } else if (typeof invoiceData.items === 'string') {
+                    try {
+                        items = JSON.parse(invoiceData.items);
+                    } catch (e) {
+                        console.error('Error parsing items:', e);
+                        items = [];
+                    }
+                }
+                
+                items.forEach(item => {
+                    // Convert values to numbers
+                    const quantity = typeof item.quantity === 'string' ? parseInt(item.quantity) : item.quantity;
+                    const rateAtSale = typeof item.rate_at_sale === 'string' ? parseFloat(item.rate_at_sale) : item.rate_at_sale;
+                    const totalLineAmount = typeof item.total_line_amount === 'string' ? parseFloat(item.total_line_amount) : item.total_line_amount;
+                    
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${item.name || 'Unknown Item'}</td>
+                        <td>${quantity}</td>
+                        <td class="text-right">₹${rateAtSale.toFixed(2)}</td>
+                        <td class="text-right">₹${totalLineAmount.toFixed(2)}</td>
+                    `;
+                    itemsBody.appendChild(row);
+                    
+                    totalAmount += totalLineAmount;
+                });
+                
+                // Convert totals to numbers
+                const totalGst = typeof invoiceData.total_gst === 'string' ? parseFloat(invoiceData.total_gst) : invoiceData.total_gst;
+                const grandTotal = typeof invoiceData.total_amount === 'string' ? parseFloat(invoiceData.total_amount) : invoiceData.total_amount;
+                
+                document.getElementById('total-amount').textContent = `₹${totalAmount.toFixed(2)}`;
+                document.getElementById('total-gst').textContent = `₹${totalGst.toFixed(2)}`;
+                document.getElementById('grand-total').textContent = `₹${grandTotal.toFixed(2)}`;
+            } catch (error) {
+                console.error('Error populating receipt:', error);
+            }
         }
         
-        // Print the receipt when the page loads (in a real implementation)
-        // window.onload = function() {
-        //     window.print();
-        // };
+        // Populate receipt when the page loads
+        window.onload = function() {
+            try {
+                // Retrieve invoice data from localStorage
+                const invoiceDataStr = localStorage.getItem('receiptInvoiceData');
+                if (invoiceDataStr) {
+                    const invoiceData = JSON.parse(invoiceDataStr);
+                    populateReceipt(invoiceData);
+                    
+                    // Remove the data from localStorage after use
+                    localStorage.removeItem('receiptInvoiceData');
+                }
+            } catch (error) {
+                console.error('Error retrieving invoice data:', error);
+            }
+            
+            // Only auto-print if we're not in the main window (i.e., opened in new tab/window)
+            if (window.opener && window.opener !== window) {
+                setTimeout(() => {
+                    window.print();
+                    // Close the window after printing (optional)
+                    // window.close();
+                }, 1000);
+            }
+        };
     </script>
 </body>
 </html>

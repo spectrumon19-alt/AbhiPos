@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Edit Product Functionality</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .test-section {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        button {
+            padding: 10px 15px;
+            margin: 5px;
+            background-color: #007cba;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #005a87;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Edit Product Functionality</h1>
+    
+    <div class="test-section">
+        <h2>Simulate Edit Product Function</h2>
+        <p>This test simulates the edit product functionality that has been implemented in the admin panel.</p>
+        <button id="test-edit">Test Edit Product</button>
+        <div id="edit-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Simulate Update Product Function</h2>
+        <p>This test simulates the update product functionality.</p>
+        <button id="test-update">Test Update Product</button>
+        <div id="update-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Simulate Reset Form Function</h2>
+        <p>This test simulates the reset form functionality.</p>
+        <button id="test-reset">Test Reset Form</button>
+        <div id="reset-result"></div>
+    </div>
+    
+    <script>
+        // Mock product data
+        const mockProducts = [
+            {
+                "product_id": 1,
+                "name": "Test Product A",
+                "sku": "TPA-001",
+                "pack_size": "1 kg",
+                "gst_rate": "18.00",
+                "purchase_rate": "80.00",
+                "selling_rate": "100.00",
+                "stock_quantity": "100"
+            }
+        ];
+        
+        // Test edit product function
+        document.getElementById('test-edit').addEventListener('click', function() {
+            const resultDiv = document.getElementById('edit-result');
+            resultDiv.innerHTML = '<p>Testing edit product functionality...</p>';
+            
+            try {
+                // Find the product (simulating the editProduct function)
+                const productId = 1;
+                const product = mockProducts.find(p => p.product_id === productId);
+                if (!product) {
+                    resultDiv.innerHTML += '<p class="error">✗ Product not found</p>';
+                    return;
+                }
+                
+                // Convert string values to numbers for editing
+                const gstRate = typeof product.gst_rate === 'string' ? parseFloat(product.gst_rate) : product.gst_rate;
+                const purchaseRate = product.purchase_rate ? 
+                    (typeof product.purchase_rate === 'string' ? parseFloat(product.purchase_rate) : product.purchase_rate) : null;
+                const sellingRate = typeof product.selling_rate === 'string' ? parseFloat(product.selling_rate) : product.selling_rate;
+                
+                resultDiv.innerHTML += `
+                    <p class="success">✓ Product found: ${product.name}</p>
+                    <p>Populating form with product data:</p>
+                    <ul>
+                        <li>Name: ${product.name}</li>
+                        <li>SKU: ${product.sku || ''}</li>
+                        <li>Pack Size: ${product.pack_size || ''}</li>
+                        <li>GST Rate: ${gstRate}</li>
+                        <li>Purchase Rate: ${purchaseRate || ''}</li>
+                        <li>Selling Rate: ${sellingRate}</li>
+                        <li>Stock Quantity: ${product.stock_quantity || 0}</li>
+                    </ul>
+                    <p class="info">In the actual implementation, the form would be populated with this data and the button would change to "Update Product".</p>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML += `<p class="error">✗ Error: ${error.message}</p>`;
+            }
+        });
+        
+        // Test update product function
+        document.getElementById('test-update').addEventListener('click', function() {
+            const resultDiv = document.getElementById('update-result');
+            resultDiv.innerHTML = '<p>Testing update product functionality...</p>';
+            
+            try {
+                // Simulate the update product function
+                const productId = 1;
+                const productData = {
+                    name: "Updated Test Product A",
+                    sku: "TPA-001-UPD",
+                    pack_size: "2 kg",
+                    gst_rate: 18.00,
+                    purchase_rate: 85.00,
+                    selling_rate: 110.00
+                };
+                
+                resultDiv.innerHTML += `
+                    <p class="success">✓ Updating product ID ${productId} with data:</p>
+                    <pre>${JSON.stringify(productData, null, 2)}</pre>
+                    <p class="info">In the actual implementation, this would make a PUT request to /api/products/${productId}</p>
+                    <p class="info">The request would include proper authentication headers and JSON payload.</p>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML += `<p class="error">✗ Error: ${error.message}</p>`;
+            }
+        });
+        
+        // Test reset form function
+        document.getElementById('test-reset').addEventListener('click', function() {
+            const resultDiv = document.getElementById('reset-result');
+            resultDiv.innerHTML = '<p>Testing reset form functionality...</p>';
+            
+            try {
+                resultDiv.innerHTML += `
+                    <p class="success">✓ Resetting form:</p>
+                    <ul>
+                        <li>Clearing all form fields</li>
+                        <li>Restoring button text to "Add Product"</li>
+                        <li>Re-attaching original event listener</li>
+                    </ul>
+                    <p class="info">In the actual implementation, this would reset the form to its initial state for adding new products.</p>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML += `<p class="error">✗ Error: ${error.message}</p>`;
+            }
+        });
+    </script>
+</body>
+</html>

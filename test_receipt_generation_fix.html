@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Receipt Generation Fix</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .test-section {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        button {
+            padding: 10px 15px;
+            margin: 5px;
+            background-color: #007cba;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #005a87;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Receipt Generation Fix</h1>
+    
+    <div class="test-section">
+        <h2>Test Receipt Data Transfer</h2>
+        <p>Testing the fixed receipt generation using localStorage.</p>
+        <button id="test-transfer">Test Data Transfer</button>
+        <div id="transfer-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test Receipt Population</h2>
+        <p>Testing the receipt population logic.</p>
+        <button id="test-population">Test Population</button>
+        <div id="population-result"></div>
+    </div>
+    
+    <script>
+        // Mock invoice data
+        const mockInvoice = {
+            "invoice_number": "INV-TEST-12345",
+            "invoice_date": "2023-01-15T10:30:00Z",
+            "customer_name": "Test Customer",
+            "total_amount": "240.00",
+            "total_gst": "40.00",
+            "items": [
+                {
+                    "name": "Test Product",
+                    "quantity": 2,
+                    "rate_at_sale": 120.0,
+                    "total_line_amount": 240.0
+                }
+            ]
+        };
+        
+        // Test data transfer using localStorage
+        document.getElementById('test-transfer').addEventListener('click', function() {
+            const resultDiv = document.getElementById('transfer-result');
+            resultDiv.innerHTML = '<p>Testing data transfer using localStorage...</p>';
+            
+            try {
+                // Simulate storing data (like sales.js would do)
+                localStorage.setItem('receiptInvoiceData', JSON.stringify(mockInvoice));
+                resultDiv.innerHTML += '<p class="success">✓ Invoice data stored in localStorage</p>';
+                
+                // Simulate retrieving data (like receipt.html would do)
+                const storedData = localStorage.getItem('receiptInvoiceData');
+                if (storedData) {
+                    const parsedData = JSON.parse(storedData);
+                    resultDiv.innerHTML += '<p class="success">✓ Invoice data retrieved from localStorage</p>';
+                    resultDiv.innerHTML += `<p class="info">Data: ${JSON.stringify(parsedData, null, 2)}</p>`;
+                    
+                    // Clean up
+                    localStorage.removeItem('receiptInvoiceData');
+                    resultDiv.innerHTML += '<p class="success">✓ Cleaned up localStorage</p>';
+                } else {
+                    resultDiv.innerHTML += '<p class="error">✗ No data found in localStorage</p>';
+                }
+                
+            } catch (error) {
+                resultDiv.innerHTML += `<p class="error">✗ Error: ${error.message}</p>`;
+            }
+        });
+        
+        // Test receipt population logic
+        document.getElementById('test-population').addEventListener('click', function() {
+            const resultDiv = document.getElementById('population-result');
+            resultDiv.innerHTML = '<p>Testing receipt population logic...</p>';
+            
+            try {
+                resultDiv.innerHTML += `
+                    <p class="success">✓ Population logic:</p>
+                    <ul>
+                        <li>Retrieve invoice data from localStorage</li>
+                        <li>Parse JSON data</li>
+                        <li>Populate header information</li>
+                        <li>Iterate through items and add to table</li>
+                        <li>Calculate and populate totals</li>
+                        <li>Trigger auto-print after population</li>
+                    </ul>
+                `;
+                
+                // Test item iteration
+                const items = mockInvoice.items;
+                resultDiv.innerHTML += `<p class="success">✓ Processing ${items.length} items:</p>`;
+                items.forEach((item, index) => {
+                    resultDiv.innerHTML += `
+                        <div style="margin-left: 20px; padding: 5px; background: #f0f0f0; border-radius: 3px; margin-bottom: 5px;">
+                            Item ${index + 1}: ${item.name} (Qty: ${item.quantity}, Amount: ₹${item.total_line_amount.toFixed(2)})
+                        </div>
+                    `;
+                });
+                
+                resultDiv.innerHTML += '<p class="success">✓ All items processed successfully!</p>';
+                
+            } catch (error) {
+                resultDiv.innerHTML += `<p class="error">✗ Error: ${error.message}</p>`;
+            }
+        });
+    </script>
+</body>
+</html>

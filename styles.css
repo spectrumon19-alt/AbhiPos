@@ -89,6 +89,7 @@ header {
     gap: 15px;
     margin-bottom: 20px;
     align-items: end;
+    position: relative;
 }
 
 .search-results {
@@ -98,9 +99,13 @@ header {
     border-radius: 3px;
     max-height: 200px;
     overflow-y: auto;
-    width: calc(100% - 30px);
+    width: 100%;
     z-index: 100;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    box-sizing: border-box;
+    top: 100%;
+    left: 0;
+    margin-top: 5px;
 }
 
 .search-result-item {
@@ -111,6 +116,35 @@ header {
 
 .search-result-item:hover {
     background-color: #f0f0f0;
+}
+
+.search-result-name {
+    font-weight: bold;
+    margin-bottom: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.search-result-details {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9em;
+    color: #666;
+}
+
+.search-result-sku {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
+    margin-right: 10px;
+}
+
+.search-result-price {
+    font-weight: bold;
+    color: #2c3e50;
+    white-space: nowrap;
 }
 
 .btn-primary {

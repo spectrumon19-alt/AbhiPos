@@ -227,6 +227,9 @@
         const addProductBtn = document.getElementById('add-product-btn');
         const productsBody = document.getElementById('products-body');
         
+        // Store original add product event listener
+        let originalAddProductListener = null;
+        
         // User elements
         const newUsernameInput = document.getElementById('new-username');
         const newPasswordInput = document.getElementById('new-password');
@@ -350,8 +353,8 @@
             });
         }
         
-        // Add product
-        addProductBtn.addEventListener('click', function() {
+        // Store the original add product function
+        originalAddProductListener = function() {
             const token = localStorage.getItem('pos_token');
             
             // Validate inputs
@@ -403,11 +406,111 @@
                 console.error('Add product error:', error);
                 alert('Failed to add product: ' + error.message);
             });
-        });
+        };
         
-        // Edit product (placeholder)
+        // Add product
+        addProductBtn.addEventListener('click', originalAddProductListener);
+        
+        // Edit product
         function editProduct(productId) {
-            alert('Edit functionality would be implemented in a full version');
+            // Find the product in our data
+            const product = productsData.find(p => p.product_id === productId);
+            if (!product) {
+                alert('Product not found');
+                return;
+            }
+            
+            // Convert string values to numbers for editing
+            const gstRate = typeof product.gst_rate === 'string' ? parseFloat(product.gst_rate) : product.gst_rate;
+            const purchaseRate = product.purchase_rate ? 
+                (typeof product.purchase_rate === 'string' ? parseFloat(product.purchase_rate) : product.purchase_rate) : null;
+            const sellingRate = typeof product.selling_rate === 'string' ? parseFloat(product.selling_rate) : product.selling_rate;
+            
+            // Fill the form with product data
+            productNameInput.value = product.name;
+            productSkuInput.value = product.sku || '';
+            productPackInput.value = product.pack_size || '';
+            productGstInput.value = gstRate;
+            productPurchaseInput.value = purchaseRate || '';
+            productSellingInput.value = sellingRate;
+            productStockInput.value = product.stock_quantity || 0;
+            
+            // Change the Add button to Update button
+            addProductBtn.textContent = 'Update Product';
+            addProductBtn.onclick = function() {
+                updateProduct(productId);
+            };
+            
+            // Scroll to the form
+            document.querySelector('#products-tab').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // Update product
+        function updateProduct(productId) {
+            const token = localStorage.getItem('pos_token');
+            
+            // Validate inputs
+            if (!productNameInput.value || !productSkuInput.value || !productGstInput.value || !productSellingInput.value) {
+                alert('Please fill in all required fields');
+                return;
+            }
+            
+            const productData = {
+                name: productNameInput.value,
+                sku: productSkuInput.value,
+                pack_size: productPackInput.value,
+                gst_rate: parseFloat(productGstInput.value),
+                purchase_rate: productPurchaseInput.value ? parseFloat(productPurchaseInput.value) : null,
+                selling_rate: parseFloat(productSellingInput.value)
+            };
+            
+            fetch(`/api/products/${productId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(productData)
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    return response.json().then(err => {
+                        throw new Error(err.message || 'Failed to update product');
+                    });
+                }
+            })
+            .then(product => {
+                alert('Product updated successfully!');
+                loadProducts();
+                // Reset form and button
+                resetProductForm();
+            })
+            .catch(error => {
+                console.error('Update product error:', error);
+                alert('Failed to update product: ' + error.message);
+            });
+        }
+        
+        // Reset product form and restore Add button
+        function resetProductForm() {
+            // Clear form
+            productNameInput.value = '';
+            productSkuInput.value = '';
+            productPackInput.value = '';
+            productGstInput.value = '';
+            productPurchaseInput.value = '';
+            productSellingInput.value = '';
+            productStockInput.value = '0';
+            
+            // Restore Add button
+            addProductBtn.textContent = 'Add Product';
+            // Remove all event listeners
+            const newAddProductBtn = addProductBtn.cloneNode(true);
+            addProductBtn.parentNode.replaceChild(newAddProductBtn, addProductBtn);
+            // Re-attach the original event listener
+            document.getElementById('add-product-btn').addEventListener('click', originalAddProductListener);
         }
         
         // Delete product

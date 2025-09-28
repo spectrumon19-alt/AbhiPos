@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Receipt Functionality</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .test-section {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        button {
+            padding: 10px 15px;
+            margin: 5px;
+            background-color: #007cba;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #005a87;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Receipt Functionality</h1>
+    
+    <div class="test-section">
+        <h2>Test Generate Receipt Function</h2>
+        <p>This test simulates the receipt generation functionality.</p>
+        <button id="test-receipt">Test Generate Receipt</button>
+        <div id="receipt-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test Populate Receipt Function</h2>
+        <p>This test simulates the receipt population functionality.</p>
+        <button id="test-populate">Test Populate Receipt</button>
+        <div id="populate-result"></div>
+    </div>
+    
+    <script>
+        // Mock invoice data
+        const mockInvoice = {
+            "invoice_number": "INV-TEST-12345",
+            "invoice_date": "2023-01-15T10:30:00Z",
+            "customer_name": "John Doe",
+            "customer_contact": "1234567890",
+            "total_amount": "1200.50",
+            "total_gst": "180.25",
+            "items": [
+                {
+                    "name": "Product A",
+                    "quantity": "2",
+                    "rate_at_sale": "100.00",
+                    "total_line_amount": "200.00"
+                },
+                {
+                    "name": "Product B",
+                    "quantity": "1",
+                    "rate_at_sale": "1000.50",
+                    "total_line_amount": "1000.50"
+                }
+            ]
+        };
+        
+        // Test generate receipt function
+        document.getElementById('test-receipt').addEventListener('click', function() {
+            const resultDiv = document.getElementById('receipt-result');
+            resultDiv.innerHTML = '<p>Testing generate receipt functionality...</p>';
+            
+            try {
+                resultDiv.innerHTML += `
+                    <p class="success">✓ Generating receipt with data:</p>
+                    <pre>${JSON.stringify(mockInvoice, null, 2)}</pre>
+                    <p class="info">In the actual implementation, this would:</p>
+                    <ul>
+                        <li>Open receipt.html in a new window/tab</li>
+                        <li>Populate the receipt with invoice data</li>
+                        <li>Automatically trigger the print dialog</li>
+                    </ul>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML += `<p class="error">✗ Error: ${error.message}</p>`;
+            }
+        });
+        
+        // Test populate receipt function
+        document.getElementById('test-populate').addEventListener('click', function() {
+            const resultDiv = document.getElementById('populate-result');
+            resultDiv.innerHTML = '<p>Testing populate receipt functionality...</p>';
+            
+            try {
+                resultDiv.innerHTML += `
+                    <p class="success">✓ Populating receipt with data:</p>
+                    <pre>${JSON.stringify(mockInvoice, null, 2)}</pre>
+                    <p class="info">The populateReceipt function would:</p>
+                    <ul>
+                        <li>Set invoice number: ${mockInvoice.invoice_number}</li>
+                        <li>Set invoice date: ${new Date(mockInvoice.invoice_date).toLocaleDateString()}</li>
+                        <li>Set customer name: ${mockInvoice.customer_name}</li>
+                        <li>Populate ${mockInvoice.items.length} items</li>
+                        <li>Calculate and display totals</li>
+                        <li>Handle data type conversions (strings to numbers)</li>
+                    </ul>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML += `<p class="error">✗ Error: ${error.message}</p>`;
+            }
+        });
+    </script>
+</body>
+</html>

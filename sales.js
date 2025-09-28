@@ -344,7 +344,20 @@ function displaySearchResults() {
         resultItem.className = 'search-result-item';
         // Ensure selling_rate is properly formatted as a number
         const sellingRate = typeof product.selling_rate === 'string' ? parseFloat(product.selling_rate) : product.selling_rate;
-        resultItem.textContent = `${product.name} (${product.sku}) - ₹${sellingRate.toFixed(2)}`;
+        
+        // Truncate long product names to prevent overflow
+        const productName = product.name.length > 50 ? product.name.substring(0, 47) + '...' : product.name;
+        const productSku = product.sku || '';
+        const skuText = productSku.length > 20 ? productSku.substring(0, 17) + '...' : productSku;
+        
+        resultItem.innerHTML = `
+            <div class="search-result-name" title="${product.name}">${productName}</div>
+            <div class="search-result-details">
+                <span class="search-result-sku" title="${productSku}">${skuText}</span>
+                <span class="search-result-price">₹${sellingRate.toFixed(2)}</span>
+            </div>
+        `;
+        
         resultItem.addEventListener('click', () => {
             selectProduct(product);
         });
@@ -452,10 +465,14 @@ function renderInvoiceItems() {
 }
 
 function generateReceipt(invoice) {
-    // In a real implementation, this would open a print-friendly page
-    // For now, we'll just log the invoice data
-    console.log('Receipt data:', invoice);
-    alert('In a complete implementation, this would generate a printable receipt.');
+    // Create a new window/tab with the receipt
+    const receiptWindow = window.open('receipt.html', '_blank');
+    
+    // Store the invoice data in localStorage so the receipt page can access it
+    localStorage.setItem('receiptInvoiceData', JSON.stringify(invoice));
+    
+    // When the receipt page loads, it will retrieve the data from localStorage
+    // and populate itself. The receipt.html page has its own auto-print logic.
 }
 
 function clearInvoice() {

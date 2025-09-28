@@ -10,10 +10,55 @@ import time
 
 # Test configuration
 BASE_URL = 'http://localhost:5001'
-ADMIN_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjo3LCJyb2xlIjoiQWRtaW4iLCJleHAiOjE3NTkxNTExMTR9.uFLQhd-lGpoksXhSdjLo5W7oP8xkbgeaO5IrhQ9SMSM"
-CASHIER_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjo4LCJyb2xlIjoiQ2FzaGllciIsImV4cCI6MTc1OTE1MTEzNX0.EVXe67nW9g5D8N6J7F3Z1X2Y9v8W4Z5Q6R7T8Y9U0I0"
-HEADERS_ADMIN = {'Authorization': f'Bearer {ADMIN_TOKEN}', 'Content-Type': 'application/json'}
-HEADERS_CASHIER = {'Authorization': f'Bearer {CASHIER_TOKEN}', 'Content-Type': 'application/json'}
+ADMIN_TOKEN = None
+CASHIER_TOKEN = None
+HEADERS_ADMIN = {'Authorization': 'Bearer ', 'Content-Type': 'application/json'}
+HEADERS_CASHIER = {'Authorization': 'Bearer ', 'Content-Type': 'application/json'}
+
+def login_users():
+    """Login to get fresh tokens"""
+    global ADMIN_TOKEN, CASHIER_TOKEN, HEADERS_ADMIN, HEADERS_CASHIER
+    
+    print("Logging in users to get fresh tokens...")
+    
+    # Login admin
+    admin_login_data = {
+        "username": "admin",
+        "password": "admin123"
+    }
+    
+    try:
+        response = requests.post(f'{BASE_URL}/api/login', json=admin_login_data)
+        if response.status_code == 200:
+            admin_data = response.json()
+            ADMIN_TOKEN = admin_data['token']
+            HEADERS_ADMIN = {'Authorization': f'Bearer {ADMIN_TOKEN}', 'Content-Type': 'application/json'}
+            print("  ✓ Admin login successful")
+        else:
+            print(f"  ✗ Admin login failed: {response.status_code}")
+            return False
+            
+        # Login cashier
+        cashier_login_data = {
+            "username": "cashier",
+            "password": "cashier123"
+        }
+        
+        response = requests.post(f'{BASE_URL}/api/login', json=cashier_login_data)
+        if response.status_code == 200:
+            cashier_data = response.json()
+            CASHIER_TOKEN = cashier_data['token']
+            HEADERS_CASHIER = {'Authorization': f'Bearer {CASHIER_TOKEN}', 'Content-Type': 'application/json'}
+            print("  ✓ Cashier login successful")
+        else:
+            print(f"  ✗ Cashier login failed: {response.status_code}")
+            return False
+            
+    except Exception as e:
+        print(f"  ✗ Login failed: {e}")
+        return False
+        
+    return True
 
 def test_auth():
     """Test authentication endpoints"""
@@ -236,6 +281,12 @@ def main():
     test_invoice_id = None
     
     try:
+        # Login to get fresh tokens
+        login_ok = login_users()
+        if not login_ok:
+            print("\n❌ Login failed. System not ready for deployment.")
+            return False
+        
         # Run all tests
         auth_ok = test_auth()
         if not auth_ok:

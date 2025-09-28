@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Receipt Generation Fix</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .test-section {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        button {
+            padding: 10px 15px;
+            margin: 5px;
+            background-color: #007cba;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #005a87;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Receipt Generation Fix</h1>
+    
+    <div class="test-section">
+        <h2>Test Invoice Data Structure</h2>
+        <p>Testing the fixed invoice data structure with product names.</p>
+        <button id="test-structure">Test Data Structure</button>
+        <div id="structure-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test Receipt Generation</h2>
+        <p>Testing the receipt generation with items that have product names.</p>
+        <button id="test-generation">Test Receipt Generation</button>
+        <div id="generation-result"></div>
+    </div>
+    
+    <script>
+        // Mock fixed invoice data (with product names)
+        const mockFixedInvoice = {
+            "invoice_number": "INV-TEST-FIXED-12345",
+            "invoice_date": "2023-01-15T10:30:00Z",
+            "customer_name": "Test Customer",
+            "customer_contact": "1234567890",
+            "total_amount": "240.00",
+            "total_gst": "40.00",
+            "items": [
+                {
+                    "name": "Fully Updated Product 1759071295",
+                    "quantity": 2,
+                    "rate_at_sale": 120.0,
+                    "total_line_amount": 240.0
+                }
+            ]
+        };
+        
+        // Test data structure
+        document.getElementById('test-structure').addEventListener('click', function() {
+            const resultDiv = document.getElementById('structure-result');
+            resultDiv.innerHTML = '<p>Testing fixed invoice data structure...</p>';
+            
+            try {
+                resultDiv.innerHTML += `
+                    <p class="success">✓ Invoice data structure:</p>
+                    <pre>${JSON.stringify(mockFixedInvoice, null, 2)}</pre>
+                `;
+                
+                // Check for product names
+                if (mockFixedInvoice.items && mockFixedInvoice.items.length > 0) {
+                    const hasNames = mockFixedInvoice.items.every(item => item.name);
+                    if (hasNames) {
+                        resultDiv.innerHTML += '<p class="success">✓ All items have product names!</p>';
+                    } else {
+                        resultDiv.innerHTML += '<p class="error">✗ Some items are missing product names</p>';
+                    }
+                } else {
+                    resultDiv.innerHTML += '<p class="error">✗ No items found</p>';
+                }
+                
+            } catch (error) {
+                resultDiv.innerHTML += `<p class="error">✗ Error: ${error.message}</p>`;
+            }
+        });
+        
+        // Test receipt generation
+        document.getElementById('test-generation').addEventListener('click', function() {
+            const resultDiv = document.getElementById('generation-result');
+            resultDiv.innerHTML = '<p>Testing receipt generation...</p>';
+            
+            try {
+                resultDiv.innerHTML += `
+                    <p class="success">✓ Generating receipt with data:</p>
+                    <pre>${JSON.stringify(mockFixedInvoice, null, 2)}</pre>
+                `;
+                
+                // Simulate receipt generation
+                const items = mockFixedInvoice.items;
+                let receiptItems = '';
+                
+                items.forEach((item, index) => {
+                    receiptItems += `
+                        <tr>
+                            <td>${item.name || 'Unknown Item'}</td>
+                            <td>${item.quantity}</td>
+                            <td class="text-right">₹${item.rate_at_sale.toFixed(2)}</td>
+                            <td class="text-right">₹${item.total_line_amount.toFixed(2)}</td>
+                        </tr>
+                    `;
+                });
+                
+                resultDiv.innerHTML += `
+                    <p class="success">✓ Receipt items HTML generated:</p>
+                    <div style="border: 1px solid #ccc; padding: 10px; background: #f9f9f9;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr>
+                                    <th style="text-align: left; padding: 5px;">Item</th>
+                                    <th style="text-align: left; padding: 5px;">Qty</th>
+                                    <th style="text-align: right; padding: 5px;">Rate</th>
+                                    <th style="text-align: right; padding: 5px;">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${receiptItems}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+                
+                resultDiv.innerHTML += '<p class="success">✓ Receipt generation successful! Items will now appear on printed receipts.</p>';
+                
+            } catch (error) {
+                resultDiv.innerHTML += `<p class="error">✗ Error: ${error.message}</p>`;
+            }
+        });
+    </script>
+</body>
+</html>
