@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POS System - Test Search and Add</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, button {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #007cba;
+            color: white;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #005a87;
+        }
+        #search-results {
+            border: 1px solid #ccc;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 10px;
+            background-color: white;
+        }
+        .search-result-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+        }
+        .search-result-item:hover {
+            background-color: #f0f8ff;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .success {
+            color: green;
+            font-weight: bold;
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+        .log {
+            background-color: #f9f9f9;
+            border: 1px solid #eee;
+            padding: 10px;
+            margin-top: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>POS System - Test Search and Add</h1>
+        
+        <div class="form-group">
+            <label for="product-search-input">Search Product:</label>
+            <input type="text" id="product-search-input" placeholder="Type product name or SKU...">
+            <button id="search-btn">Search</button>
+        </div>
+        
+        <div id="search-results"></div>
+        
+        <div class="form-group">
+            <label for="quantity-input">Quantity:</label>
+            <input type="number" id="quantity-input" min="1" value="1">
+            <button id="add-item-btn">Add Item</button>
+            <button id="clear-btn">Clear</button>
+        </div>
+        
+        <div id="message"></div>
+        
+        <h2>Selected Product</h2>
+        <div id="selected-product">No product selected</div>
+        
+        <h2>Invoice Items</h2>
+        <table id="invoice-table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Quantity</th>
+                    <th>Rate</th>
+                    <th>Amount</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="invoice-items-body">
+                <tr>
+                    <td colspan="5" style="text-align: center;">No items added</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <h2>Debug Log</h2>
+        <div id="debug-log" class="log"></div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentSelectedProduct = null;
+        let invoiceItems = [];
+        let debugLog = [];
+        
+        // DOM Elements
+        let productSearchInput, searchResultsDiv, quantityInput, addItemBtn, clearBtn;
+        let selectedProductDiv, invoiceItemsBody, messageDiv, debugLogDiv;
+        
+        // Helper function to convert API string values to numbers
+        function convertProductNumbers(product) {
+            return {
+                ...product,
+                gst_rate: parseFloat(product.gst_rate),
+                selling_rate: parseFloat(product.selling_rate),
+                purchase_rate: product.purchase_rate ? parseFloat(product.purchase_rate) : null
+            };
+        }
+        
+        // Debug logging function
+        function debugLogMessage(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}`;
+            debugLog.push(logEntry);
+            
+            // Update debug log display
+            if (debugLogDiv) {
+                debugLogDiv.innerHTML = debugLog.join('<br>');
+                debugLogDiv.scrollTop = debugLogDiv.scrollHeight;
+            }
+            
+            console.log(logEntry);
+        }
+        
+        // Show message to user
+        function showMessage(text, isError = false) {
+            if (messageDiv) {
+                messageDiv.textContent = text;
+                messageDiv.className = isError ? 'error' : 'success';
+            }
+        }
+        
+        // Initialize DOM elements
+        function initDOMElements() {
+            productSearchInput = document.getElementById('product-search-input');
+            searchResultsDiv = document.getElementById('search-results');
+            quantityInput = document.getElementById('quantity-input');
+            addItemBtn = document.getElementById('add-item-btn');
+            clearBtn = document.getElementById('clear-btn');
+            selectedProductDiv = document.getElementById('selected-product');
+            invoiceItemsBody = document.getElementById('invoice-items-body');
+            messageDiv = document.getElementById('message');
+            debugLogDiv = document.getElementById('debug-log');
+        }
+        
+        // Simulate product search
+        function searchProducts(query) {
+            debugLogMessage(`Searching for products: ${query}`);
+            
+            // Mock API response with string values
+            const mockProducts = [
+                {
+                    "product_id": 1,
+                    "name": "Apple iPhone 13",
+                    "sku": "IPH13-BLK-128",
+                    "pack_size": "1 piece",
+                    "gst_rate": "18.00",
+                    "selling_rate": "799.99",
+                    "purchase_rate": "650.00"
+                },
+                {
+                    "product_id": 2,
+                    "name": "Samsung Galaxy S21",
+                    "sku": "S21-BLK-256",
+                    "pack_size": "1 piece",
+                    "gst_rate": "18.00",
+                    "selling_rate": "899.99",
+                    "purchase_rate": "720.00"
+                },
+                {
+                    "product_id": 3,
+                    "name": "Google Pixel 6",
+                    "sku": "PIX6-BLK-128",
+                    "pack_size": "1 piece",
+                    "gst_rate": "18.00",
+                    "selling_rate": "699.99",
+                    "purchase_rate": "580.00"
+                },
+                {
+                    "product_id": 4,
+                    "name": "MacBook Pro 14\"",
+                    "sku": "MBP-14-M1-512",
+                    "pack_size": "1 piece",
+                    "gst_rate": "18.00",
+                    "selling_rate": "1999.99",
+                    "purchase_rate": "1700.00"
+                }
+            ];
+            
+            // Filter results based on query
+            const results = mockProducts.filter(product => 
+                product.name.toLowerCase().includes(query.toLowerCase()) || 
+                product.sku.toLowerCase().includes(query.toLowerCase())
+            );
+            
+            displaySearchResults(results);
+        }
+        
+        // Display search results
+        function displaySearchResults(results) {
+            debugLogMessage(`Displaying ${results.length} search results`);
+            
+            searchResultsDiv.innerHTML = '';
+            
+            if (results.length === 0) {
+                searchResultsDiv.innerHTML = '<div class="search-result-item">No products found</div>';
+                return;
+            }
+            
+            results.forEach(product => {
+                const resultItem = document.createElement('div');
+                resultItem.className = 'search-result-item';
+                const sellingRate = typeof product.selling_rate === 'string' ? parseFloat(product.selling_rate) : product.selling_rate;
+                resultItem.textContent = `${product.name} (${product.sku}) - $${sellingRate.toFixed(2)}`;
+                resultItem.addEventListener('click', () => {
+                    selectProduct(product);
+                });
+                searchResultsDiv.appendChild(resultItem);
+            });
+        }
+        
+        // Select a product
+        function selectProduct(product) {
+            debugLogMessage(`Product selected: ${product.name}`);
+            
+            // Convert string values to numbers
+            currentSelectedProduct = convertProductNumbers(product);
+            
+            // Update UI
+            productSearchInput.value = product.name;
+            searchResultsDiv.innerHTML = '';
+            
+            // Display selected product
+            selectedProductDiv.innerHTML = `
+                <strong>${currentSelectedProduct.name}</strong><br>
+                SKU: ${currentSelectedProduct.sku}<br>
+                Rate: $${currentSelectedProduct.selling_rate.toFixed(2)}<br>
+                GST: ${currentSelectedProduct.gst_rate}%
+            `;
+            
+            showMessage(`Selected: ${currentSelectedProduct.name}`, false);
+        }
+        
+        // Add item to invoice
+        function addItemToInvoice() {
+            debugLogMessage("Add item button clicked");
+            
+            if (!currentSelectedProduct) {
+                debugLogMessage("No product selected");
+                showMessage("Please select a product first", true);
+                return;
+            }
+            
+            const quantity = parseInt(quantityInput.value) || 1;
+            debugLogMessage(`Adding item with quantity: ${quantity}`);
+            
+            // Ensure product has proper numeric values
+            const productToAdd = convertProductNumbers(currentSelectedProduct);
+            
+            // Create item
+            const item = {
+                product_id: productToAdd.product_id,
+                name: productToAdd.name,
+                pack_size: productToAdd.pack_size,
+                gst_rate: productToAdd.gst_rate,
+                selling_rate: productToAdd.selling_rate,
+                quantity: quantity
+            };
+            
+            // Add to invoice
+            invoiceItems.push(item);
+            debugLogMessage(`Item added to invoice: ${item.name}`);
+            
+            // Update UI
+            renderInvoiceItems();
+            clearProductSelection();
+            showMessage(`Added: ${item.name} (Qty: ${quantity})`, false);
+        }
+        
+        // Render invoice items
+        function renderInvoiceItems() {
+            if (invoiceItems.length === 0) {
+                invoiceItemsBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No items added</td></tr>';
+                return;
+            }
+            
+            invoiceItemsBody.innerHTML = '';
+            
+            invoiceItems.forEach((item, index) => {
+                const lineAmount = item.quantity * item.selling_rate;
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.name}</td>
+                    <td>${item.quantity}</td>
+                    <td>$${item.selling_rate.toFixed(2)}</td>
+                    <td>$${lineAmount.toFixed(2)}</td>
+                    <td><button class="remove-btn" data-index="${index}">Remove</button></td>
+                `;
+                
+                invoiceItemsBody.appendChild(row);
+            });
+            
+            // Add event listeners to remove buttons
+            document.querySelectorAll('.remove-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const index = parseInt(this.getAttribute('data-index'));
+                    invoiceItems.splice(index, 1);
+                    renderInvoiceItems();
+                    debugLogMessage(`Item removed at index ${index}`);
+                });
+            });
+        }
+        
+        // Clear product selection
+        function clearProductSelection() {
+            debugLogMessage("Clearing product selection");
+            productSearchInput.value = '';
+            quantityInput.value = '1';
+            currentSelectedProduct = null;
+            selectedProductDiv.innerHTML = 'No product selected';
+            searchResultsDiv.innerHTML = '';
+        }
+        
+        // Clear invoice
+        function clearInvoice() {
+            debugLogMessage("Clearing invoice");
+            invoiceItems = [];
+            renderInvoiceItems();
+            clearProductSelection();
+            showMessage("Invoice cleared", false);
+        }
+        
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            debugLogMessage("Page loaded, initializing...");
+            
+            // Initialize DOM elements
+            initDOMElements();
+            
+            // Attach event listeners
+            if (productSearchInput) {
+                productSearchInput.addEventListener('input', function() {
+                    const query = this.value.trim();
+                    if (query.length >= 2) {
+                        // Debounce search
+                        setTimeout(() => {
+                            if (this.value.trim() === query) {
+                                searchProducts(query);
+                            }
+                        }, 300);
+                    } else {
+                        searchResultsDiv.innerHTML = '';
+                    }
+                });
+            }
+            
+            if (addItemBtn) {
+                addItemBtn.addEventListener('click', addItemToInvoice);
+            }
+            
+            if (clearBtn) {
+                clearBtn.addEventListener('click', clearInvoice);
+            }
+            
+            // Close search results when clicking elsewhere
+            document.addEventListener('click', function(event) {
+                if (searchResultsDiv && 
+                    !productSearchInput.contains(event.target) && 
+                    !searchResultsDiv.contains(event.target)) {
+                    searchResultsDiv.innerHTML = '';
+                }
+            });
+            
+            debugLogMessage("Page initialization complete");
+            showMessage("Ready to search and add products", false);
+        });
+    </script>
+</body>
+</html>

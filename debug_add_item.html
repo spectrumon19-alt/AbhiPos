@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Item Debug Test</title>
+    <style>
+        .debug-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .error {
+            color: red;
+        }
+        .success {
+            color: green;
+        }
+        .info {
+            color: blue;
+        }
+    </style>
+</head>
+<body>
+    <h1>Add Item Debug Test</h1>
+    
+    <div class="debug-section">
+        <h2>Step 1: Check DOM Elements</h2>
+        <button id="check-dom">Check DOM Elements</button>
+        <div id="dom-result"></div>
+    </div>
+    
+    <div class="debug-section">
+        <h2>Step 2: Simulate Product Selection</h2>
+        <button id="simulate-selection">Simulate Product Selection</button>
+        <div id="selection-result"></div>
+    </div>
+    
+    <div class="debug-section">
+        <h2>Step 3: Test Add Item Function</h2>
+        <button id="test-add-item">Test Add Item Function</button>
+        <div id="add-item-result"></div>
+    </div>
+    
+    <div class="debug-section">
+        <h2>Step 4: Check Invoice Items</h2>
+        <button id="check-invoice">Check Invoice Items</button>
+        <div id="invoice-result"></div>
+    </div>
+    
+    <script>
+        // Global variables for testing
+        let testSelectedProduct = null;
+        let testInvoiceItems = [];
+        
+        // Step 1: Check DOM Elements
+        document.getElementById('check-dom').addEventListener('click', function() {
+            const resultDiv = document.getElementById('dom-result');
+            let results = [];
+            
+            const elements = [
+                'product-search-input',
+                'quantity-input',
+                'add-item-btn',
+                'invoice-items-body'
+            ];
+            
+            elements.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    results.push(`<span class="success">✓ ${id} found</span>`);
+                } else {
+                    results.push(`<span class="error">✗ ${id} NOT found</span>`);
+                }
+            });
+            
+            resultDiv.innerHTML = results.join('<br>');
+        });
+        
+        // Step 2: Simulate Product Selection
+        document.getElementById('simulate-selection').addEventListener('click', function() {
+            const resultDiv = document.getElementById('selection-result');
+            
+            // Create a test product
+            testSelectedProduct = {
+                product_id: 1,
+                name: "Test Product",
+                pack_size: "1 kg",
+                gst_rate: 18.00,
+                selling_rate: 100.00
+            };
+            
+            resultDiv.innerHTML = `
+                <span class="success">✓ Product selected successfully</span>
+                <pre>${JSON.stringify(testSelectedProduct, null, 2)}</pre>
+            `;
+        });
+        
+        // Step 3: Test Add Item Function
+        document.getElementById('test-add-item').addEventListener('click', function() {
+            const resultDiv = document.getElementById('add-item-result');
+            
+            try {
+                // Check if product is selected
+                if (!testSelectedProduct) {
+                    resultDiv.innerHTML = '<span class="error">✗ No product selected. Run Step 2 first.</span>';
+                    return;
+                }
+                
+                // Get quantity
+                const quantity = 1; // Default quantity for testing
+                
+                // Check if product is already in invoice
+                const existingItemIndex = testInvoiceItems.findIndex(item => item.product_id === testSelectedProduct.product_id);
+                
+                if (existingItemIndex >= 0) {
+                    // Update quantity if product already exists
+                    testInvoiceItems[existingItemIndex].quantity += quantity;
+                    resultDiv.innerHTML = '<span class="info">ℹ Updated existing item quantity</span>';
+                } else {
+                    // Add new item
+                    const item = {
+                        product_id: testSelectedProduct.product_id,
+                        name: testSelectedProduct.name,
+                        pack_size: testSelectedProduct.pack_size,
+                        gst_rate: testSelectedProduct.gst_rate,
+                        selling_rate: testSelectedProduct.selling_rate,
+                        quantity: quantity
+                    };
+                    testInvoiceItems.push(item);
+                    resultDiv.innerHTML = `
+                        <span class="success">✓ New item added successfully</span>
+                        <pre>${JSON.stringify(item, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <span class="error">✗ Error adding item: ${error.message}</span>
+                    <pre>${error.stack}</pre>
+                `;
+            }
+        });
+        
+        // Step 4: Check Invoice Items
+        document.getElementById('check-invoice').addEventListener('click', function() {
+            const resultDiv = document.getElementById('invoice-result');
+            
+            if (testInvoiceItems.length === 0) {
+                resultDiv.innerHTML = '<span class="info">ℹ No items in invoice</span>';
+                return;
+            }
+            
+            resultDiv.innerHTML = `
+                <span class="success">✓ Found ${testInvoiceItems.length} item(s) in invoice</span>
+                <pre>${JSON.stringify(testInvoiceItems, null, 2)}</pre>
+            `;
+        });
+    </script>
+</body>
+</html>

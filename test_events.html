@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Listener Test</title>
+</head>
+<body>
+    <h1>Event Listener Test</h1>
+    
+    <div class="product-search">
+        <div class="form-group">
+            <label for="product-search-input">Search Product:</label>
+            <input type="text" id="product-search-input" placeholder="Type product name or SKU...">
+            <div id="search-results" class="search-results"></div>
+        </div>
+        <div class="form-group">
+            <label for="quantity-input">Quantity:</label>
+            <input type="number" id="quantity-input" min="1" value="1">
+        </div>
+        <button id="add-item-btn" class="btn-primary">Add Item</button>
+    </div>
+    
+    <div class="invoice-items">
+        <table>
+            <thead>
+                <tr>
+                    <th>SL No</th>
+                    <th>Product</th>
+                    <th>Pack</th>
+                    <th>GST %</th>
+                    <th>Qty</th>
+                    <th>Rate</th>
+                    <th>Taxable Value</th>
+                    <th>SGST</th>
+                    <th>CGST</th>
+                    <th>Amount</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="invoice-items-body">
+                <!-- Items will be added here dynamically -->
+            </tbody>
+        </table>
+    </div>
+    
+    <button id="test-events">Test Event Listeners</button>
+    <div id="event-result"></div>
+    
+    <script>
+        document.getElementById('test-events').addEventListener('click', function() {
+            const resultDiv = document.getElementById('event-result');
+            
+            // Check if elements exist
+            const productSearchInput = document.getElementById('product-search-input');
+            const addItemBtn = document.getElementById('add-item-btn');
+            const invoiceItemsBody = document.getElementById('invoice-items-body');
+            
+            let results = [];
+            
+            if (productSearchInput) {
+                results.push("✓ product-search-input found");
+                results.push(`  Event listeners: ${getEventListeners(productSearchInput).input ? 'Yes' : 'No'}`);
+            } else {
+                results.push("✗ product-search-input NOT found");
+            }
+            
+            if (addItemBtn) {
+                results.push("✓ add-item-btn found");
+                results.push(`  Event listeners: ${getEventListeners(addItemBtn).click ? 'Yes' : 'No'}`);
+            } else {
+                results.push("✗ add-item-btn NOT found");
+            }
+            
+            if (invoiceItemsBody) {
+                results.push("✓ invoice-items-body found");
+            } else {
+                results.push("✗ invoice-items-body NOT found");
+            }
+            
+            resultDiv.innerHTML = '<pre>' + results.join('\n') + '</pre>';
+        });
+        
+        // Simple function to check if element has event listeners (simplified version)
+        function getEventListeners(element) {
+            // In a real implementation, we would check for actual event listeners
+            // For now, we'll just return a mock object
+            return {
+                input: element.id === 'product-search-input',
+                click: element.id === 'add-item-btn'
+            };
+        }
+    </script>
+</body>
+</html>

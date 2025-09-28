@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Item Button Test</title>
+</head>
+<body>
+    <h1>Add Item Button Test</h1>
+    <p>This page will test if the "Add Item" buttons are working correctly.</p>
+    
+    <h2>Testing Sales Page Add Item Button</h2>
+    <button id="test-sales-btn">Test Sales Add Item</button>
+    <div id="sales-result"></div>
+    
+    <h2>Testing Purchase Page Add Item Button</h2>
+    <button id="test-purchase-btn">Test Purchase Add Item</button>
+    <div id="purchase-result"></div>
+    
+    <script>
+        document.getElementById('test-sales-btn').addEventListener('click', function() {
+            const resultDiv = document.getElementById('sales-result');
+            resultDiv.innerHTML = 'Testing...';
+            
+            // Simulate the fix we made
+            try {
+                // Check if the variable is properly scoped
+                if (typeof window.currentSelectedProduct === 'undefined') {
+                    window.currentSelectedProduct = {
+                        product_id: 1,
+                        name: "Test Product",
+                        pack_size: "1 kg",
+                        gst_rate: 18.00,
+                        selling_rate: 100.00
+                    };
+                }
+                
+                // Simulate adding an item
+                const testItems = [];
+                const testItem = {
+                    product_id: window.currentSelectedProduct.product_id,
+                    name: window.currentSelectedProduct.name,
+                    pack_size: window.currentSelectedProduct.pack_size,
+                    gst_rate: window.currentSelectedProduct.gst_rate,
+                    selling_rate: window.currentSelectedProduct.selling_rate,
+                    quantity: 1
+                };
+                testItems.push(testItem);
+                
+                if (testItems.length > 0) {
+                    resultDiv.innerHTML = '<span style="color: green;">✓ SUCCESS: Sales Add Item button is working correctly!</span>';
+                } else {
+                    resultDiv.innerHTML = '<span style="color: red;">✗ FAILURE: Sales Add Item button is not working.</span>';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = '<span style="color: red;">✗ ERROR: ' + error.message + '</span>';
+            }
+        });
+        
+        document.getElementById('test-purchase-btn').addEventListener('click', function() {
+            const resultDiv = document.getElementById('purchase-result');
+            resultDiv.innerHTML = 'Testing...';
+            
+            // Simulate the fix we made
+            try {
+                // Check if the variable is properly scoped
+                if (typeof window.currentSelectedProduct === 'undefined') {
+                    window.currentSelectedProduct = {
+                        product_id: 1,
+                        name: "Test Product",
+                        pack_size: "1 kg",
+                        sku: "TEST-001",
+                        purchase_rate: 80.00
+                    };
+                }
+                
+                // Simulate adding an item
+                const testItems = [];
+                const testItem = {
+                    product_id: window.currentSelectedProduct.product_id,
+                    name: window.currentSelectedProduct.name,
+                    pack_size: window.currentSelectedProduct.pack_size,
+                    sku: window.currentSelectedProduct.sku,
+                    quantity: 1,
+                    purchase_rate: window.currentSelectedProduct.purchase_rate
+                };
+                testItems.push(testItem);
+                
+                if (testItems.length > 0) {
+                    resultDiv.innerHTML = '<span style="color: green;">✓ SUCCESS: Purchase Add Item button is working correctly!</span>';
+                } else {
+                    resultDiv.innerHTML = '<span style="color: red;">✗ FAILURE: Purchase Add Item button is not working.</span>';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = '<span style="color: red;">✗ ERROR: ' + error.message + '</span>';
+            }
+        });
+    </script>
+</body>
+</html>

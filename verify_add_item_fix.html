@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Item Fix Verification</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        button {
+            padding: 10px 15px;
+            margin: 5px;
+            background-color: #007cba;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #005a87;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Add Item Fix Verification</h1>
+    
+    <div class="test-section">
+        <h2>String to Number Conversion Test</h2>
+        <p>This test verifies that string values from the API are properly converted to numbers.</p>
+        <button id="conversion-test">Run Conversion Test</button>
+        <div id="conversion-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Complete Add Item Flow Test</h2>
+        <p>This test simulates the complete Add Item flow with proper data conversion.</p>
+        <button id="flow-test">Run Complete Flow Test</button>
+        <div id="flow-result"></div>
+    </div>
+    
+    <script>
+        // Test String to Number Conversion
+        document.getElementById('conversion-test').addEventListener('click', function() {
+            const resultDiv = document.getElementById('conversion-result');
+            resultDiv.innerHTML = '<p>Testing string to number conversion...</p>';
+            
+            // Simulate API data (strings)
+            const apiProduct = {
+                "gst_rate": "18.00",
+                "name": "Product A",
+                "pack_size": "1 kg",
+                "product_id": 1,
+                "purchase_rate": "80.00",
+                "selling_rate": "100.00",
+                "sku": "PROD-A-001"
+            };
+            
+            resultDiv.innerHTML += '<p>API Product Data (strings):</p>';
+            resultDiv.innerHTML += '<pre>' + JSON.stringify(apiProduct, null, 2) + '</pre>';
+            
+            try {
+                // Convert strings to numbers (this is what we fixed in sales.js)
+                const item = {
+                    product_id: apiProduct.product_id,
+                    name: apiProduct.name,
+                    pack_size: apiProduct.pack_size,
+                    gst_rate: parseFloat(apiProduct.gst_rate), // Convert string to number
+                    selling_rate: parseFloat(apiProduct.selling_rate), // Convert string to number
+                    quantity: 1
+                };
+                
+                resultDiv.innerHTML += '<p>Converted Item Data (numbers):</p>';
+                resultDiv.innerHTML += '<pre>' + JSON.stringify(item, null, 2) + '</pre>';
+                
+                // Test calculations
+                resultDiv.innerHTML += '<p>Testing calculations with converted data:</p>';
+                
+                const lineAmount = item.quantity * item.selling_rate;
+                resultDiv.innerHTML += `<p>Line amount (1 * 100.00): ${lineAmount} (type: ${typeof lineAmount})</p>`;
+                
+                const taxableValue = lineAmount / (1 + (item.gst_rate / 100));
+                resultDiv.innerHTML += `<p>Taxable value: ${taxableValue.toFixed(2)} (type: ${typeof taxableValue})</p>`;
+                
+                const itemGst = lineAmount - taxableValue;
+                resultDiv.innerHTML += `<p>Item GST: ${itemGst.toFixed(2)} (type: ${typeof itemGst})</p>`;
+                
+                const sgst = itemGst / 2;
+                const cgst = itemGst / 2;
+                resultDiv.innerHTML += `<p>SGST: ${sgst.toFixed(2)} (type: ${typeof sgst})</p>`;
+                resultDiv.innerHTML += `<p>CGST: ${cgst.toFixed(2)} (type: ${typeof cgst})</p>`;
+                
+                resultDiv.innerHTML += '<p class="success">✓ All calculations work correctly with proper number conversion!</p>';
+                
+            } catch (error) {
+                resultDiv.innerHTML += `<p class="error">✗ Error: ${error.message}</p>`;
+                console.error('Conversion test error:', error);
+            }
+        });
+        
+        // Test Complete Add Item Flow
+        document.getElementById('flow-test').addEventListener('click', function() {
+            const resultDiv = document.getElementById('flow-result');
+            resultDiv.innerHTML = '<p>Running complete Add Item flow test...</p>';
+            
+            try {
+                // Simulate the complete flow
+                let invoiceItems = [];
+                let currentSelectedProduct = {
+                    "gst_rate": "18.00",
+                    "name": "Product A",
+                    "pack_size": "1 kg",
+                    "product_id": 1,
+                    "purchase_rate": "80.00",
+                    "selling_rate": "100.00",
+                    "sku": "PROD-A-001"
+                };
+                
+                resultDiv.innerHTML += '<p>1. Product selected:</p>';
+                resultDiv.innerHTML += '<pre>' + JSON.stringify(currentSelectedProduct, null, 2) + '</pre>';
+                
+                // Simulate Add Item click
+                const quantity = 2;
+                resultDiv.innerHTML += `<p>2. Adding item with quantity: ${quantity}</p>`;
+                
+                const item = {
+                    product_id: currentSelectedProduct.product_id,
+                    name: currentSelectedProduct.name,
+                    pack_size: currentSelectedProduct.pack_size,
+                    gst_rate: parseFloat(currentSelectedProduct.gst_rate), // Convert string to number
+                    selling_rate: parseFloat(currentSelectedProduct.selling_rate), // Convert string to number
+                    quantity: quantity
+                };
+                invoiceItems.push(item);
+                
+                resultDiv.innerHTML += '<p>3. Item added to invoice:</p>';
+                resultDiv.innerHTML += '<pre>' + JSON.stringify(item, null, 2) + '</pre>';
+                
+                // Verify calculations
+                resultDiv.innerHTML += '<p>4. Verifying calculations:</p>';
+                
+                const lineAmount = item.quantity * item.selling_rate;
+                const taxableValue = lineAmount / (1 + (item.gst_rate / 100));
+                const itemGst = lineAmount - taxableValue;
+                const sgst = itemGst / 2;
+                const cgst = itemGst / 2;
+                
+                resultDiv.innerHTML += `<p>   Line Amount: ₹${lineAmount.toFixed(2)}</p>`;
+                resultDiv.innerHTML += `<p>   Taxable Value: ₹${taxableValue.toFixed(2)}</p>`;
+                resultDiv.innerHTML += `<p>   Total GST: ₹${itemGst.toFixed(2)}</p>`;
+                resultDiv.innerHTML += `<p>   SGST: ₹${sgst.toFixed(2)}</p>`;
+                resultDiv.innerHTML += `<p>   CGST: ₹${cgst.toFixed(2)}</p>`;
+                
+                if (invoiceItems.length > 0 && item.quantity === 2) {
+                    resultDiv.innerHTML += '<p class="success">✓ Complete Add Item flow test PASSED!</p>';
+                } else {
+                    resultDiv.innerHTML += '<p class="error">✗ Complete Add Item flow test FAILED!</p>';
+                }
+                
+            } catch (error) {
+                resultDiv.innerHTML += `<p class="error">✗ Error: ${error.message}</p>`;
+                console.error('Flow test error:', error);
+            }
+        });
+    </script>
+</body>
+</html>

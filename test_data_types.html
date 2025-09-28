@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Type Test</title>
+</head>
+<body>
+    <h1>Data Type Test</h1>
+    <p>This test checks if the data type issue is causing the Add Item button to fail.</p>
+    
+    <button id="test-data-types">Test Data Types</button>
+    <div id="result"></div>
+    
+    <script>
+        document.getElementById('test-data-types').addEventListener('click', function() {
+            const resultDiv = document.getElementById('result');
+            
+            // Simulate the exact data format returned by the API
+            const apiProduct = {
+                "gst_rate": "18.00",
+                "name": "Product A",
+                "pack_size": "1 kg",
+                "product_id": 1,
+                "purchase_rate": "80.00",
+                "selling_rate": "100.00",
+                "sku": "PROD-A-001",
+                "stock_quantity": 64
+            };
+            
+            resultDiv.innerHTML = '<p>Testing with API data format...</p>';
+            
+            try {
+                // Simulate the add item process with string values
+                const item = {
+                    product_id: apiProduct.product_id,
+                    name: apiProduct.name,
+                    pack_size: apiProduct.pack_size,
+                    gst_rate: apiProduct.gst_rate, // This is a string!
+                    selling_rate: apiProduct.selling_rate, // This is a string!
+                    quantity: 1
+                };
+                
+                resultDiv.innerHTML += '<p>Item created with string values:</p>';
+                resultDiv.innerHTML += '<pre>' + JSON.stringify(item, null, 2) + '</pre>';
+                
+                // Try to do calculations with string values
+                resultDiv.innerHTML += '<p>Testing calculations...</p>';
+                
+                const lineAmount = item.quantity * item.selling_rate;
+                resultDiv.innerHTML += `<p>Line amount calculation (1 * "100.00"): ${lineAmount} (type: ${typeof lineAmount})</p>`;
+                
+                const taxableValue = lineAmount / (1 + (item.gst_rate / 100));
+                resultDiv.innerHTML += `<p>Taxable value calculation: ${taxableValue} (type: ${typeof taxableValue})</p>`;
+                
+                const itemGst = lineAmount - taxableValue;
+                resultDiv.innerHTML += `<p>Item GST calculation: ${itemGst} (type: ${typeof itemGst})</p>`;
+                
+                resultDiv.innerHTML += '<p class="success">✓ Calculations work even with string values due to JavaScript type coercion!</p>';
+                
+            } catch (error) {
+                resultDiv.innerHTML += `<p class="error">✗ Error: ${error.message}</p>`;
+                console.error('Test error:', error);
+            }
+        });
+    </script>
+</body>
+</html>

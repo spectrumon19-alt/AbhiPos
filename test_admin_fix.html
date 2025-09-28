@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Admin Panel Fix</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .test-section {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        button {
+            padding: 10px 15px;
+            margin: 5px;
+            background-color: #007cba;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #005a87;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Admin Panel Fix</h1>
+    
+    <div class="test-section">
+        <h2>Test Product Data Rendering</h2>
+        <button id="test-render">Test Product Rendering</button>
+        <div id="render-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test Invoice Data Rendering</h2>
+        <button id="test-invoice">Test Invoice Rendering</button>
+        <div id="invoice-result"></div>
+    </div>
+    
+    <script>
+        // Test the fixed product rendering logic
+        document.getElementById('test-render').addEventListener('click', function() {
+            const resultDiv = document.getElementById('render-result');
+            
+            // Mock product data (simulating API response with string values)
+            const mockProducts = [
+                {
+                    "product_id": 1,
+                    "name": "Test Product A",
+                    "sku": "TPA-001",
+                    "pack_size": "1 kg",
+                    "gst_rate": "18.00",  // String from API
+                    "purchase_rate": "80.00",  // String from API
+                    "selling_rate": "100.00",  // String from API
+                    "stock_quantity": "100"  // String from API
+                },
+                {
+                    "product_id": 2,
+                    "name": "Test Product B",
+                    "sku": "TPB-002",
+                    "pack_size": "500 g",
+                    "gst_rate": "12.00",  // String from API
+                    "purchase_rate": null,
+                    "selling_rate": "50.00",  // String from API
+                    "stock_quantity": "50"  // String from API
+                }
+            ];
+            
+            resultDiv.innerHTML = '<p>Testing product rendering with string values...</p>';
+            
+            // Simulate the fixed rendering logic
+            mockProducts.forEach(product => {
+                try {
+                    // Convert string values to numbers for proper formatting
+                    const gstRate = typeof product.gst_rate === 'string' ? parseFloat(product.gst_rate) : product.gst_rate;
+                    const purchaseRate = product.purchase_rate ? 
+                        (typeof product.purchase_rate === 'string' ? parseFloat(product.purchase_rate) : product.purchase_rate) : null;
+                    const sellingRate = typeof product.selling_rate === 'string' ? parseFloat(product.selling_rate) : product.selling_rate;
+                    const stockQuantity = typeof product.stock_quantity === 'string' ? parseInt(product.stock_quantity) : product.stock_quantity;
+                    
+                    resultDiv.innerHTML += `
+                        <div style="border: 1px solid #eee; padding: 10px; margin: 10px 0;">
+                            <p><strong>${product.name}</strong></p>
+                            <ul>
+                                <li>SKU: ${product.sku || '-'}</li>
+                                <li>Pack Size: ${product.pack_size || '-'}</li>
+                                <li>GST Rate: ${gstRate}%</li>
+                                <li>Purchase Rate: ₹${purchaseRate ? purchaseRate.toFixed(2) : '-'}</li>
+                                <li>Selling Rate: ₹${sellingRate.toFixed(2)}</li>
+                                <li>Stock Quantity: ${stockQuantity || 0}</li>
+                            </ul>
+                        </div>
+                    `;
+                    
+                    resultDiv.innerHTML += '<p class="success">✓ Product rendered successfully!</p>';
+                } catch (error) {
+                    resultDiv.innerHTML += `<p class="error">✗ Error rendering product: ${error.message}</p>`;
+                    console.error('Render error:', error);
+                }
+            });
+        });
+        
+        // Test the fixed invoice rendering logic
+        document.getElementById('test-invoice').addEventListener('click', function() {
+            const resultDiv = document.getElementById('invoice-result');
+            
+            // Mock invoice data (simulating API response with string values)
+            const mockInvoices = [
+                {
+                    "invoice_id": 1,
+                    "invoice_number": "INV-001",
+                    "invoice_date": "2023-01-15T10:30:00Z",
+                    "customer_name": "John Doe",
+                    "total_amount": "1200.50",  // String from API
+                    "status": "Completed",
+                    "created_by": "admin"
+                }
+            ];
+            
+            resultDiv.innerHTML = '<p>Testing invoice rendering with string values...</p>';
+            
+            // Simulate the fixed rendering logic
+            mockInvoices.forEach(invoice => {
+                try {
+                    // Convert string values to numbers for proper formatting
+                    const totalAmount = typeof invoice.total_amount === 'string' ? parseFloat(invoice.total_amount) : invoice.total_amount;
+                    
+                    resultDiv.innerHTML += `
+                        <div style="border: 1px solid #eee; padding: 10px; margin: 10px 0;">
+                            <p><strong>Invoice ${invoice.invoice_number}</strong></p>
+                            <ul>
+                                <li>Date: ${new Date(invoice.invoice_date).toLocaleDateString()}</li>
+                                <li>Customer: ${invoice.customer_name || '-'}</li>
+                                <li>Total Amount: ₹${totalAmount.toFixed(2)}</li>
+                                <li>Status: ${invoice.status}</li>
+                                <li>Created By: ${invoice.created_by}</li>
+                            </ul>
+                        </div>
+                    `;
+                    
+                    resultDiv.innerHTML += '<p class="success">✓ Invoice rendered successfully!</p>';
+                } catch (error) {
+                    resultDiv.innerHTML += `<p class="error">✗ Error rendering invoice: ${error.message}</p>`;
+                    console.error('Render error:', error);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

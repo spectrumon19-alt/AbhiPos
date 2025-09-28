@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POS System - Admin Panel</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .admin-screen {
+            background-color: white;
+            border-radius: 5px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .admin-tabs {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-bottom: none;
+            border-radius: 5px 5px 0 0;
+            margin-right: 5px;
+        }
+        
+        .tab.active {
+            background-color: white;
+            border-bottom: 1px solid white;
+            margin-bottom: -1px;
+            font-weight: bold;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .form-inline {
+            display: flex;
+            gap: 10px;
+            align-items: end;
+            margin-bottom: 20px;
+        }
+        
+        .form-inline .form-group {
+            margin-bottom: 0;
+        }
+        
+        .user-table, .invoice-table {
+            width: 100%;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Admin Panel</h1>
+            <div class="user-info">
+                <span id="username">Guest</span>
+                <button id="logout-btn">Logout</button>
+            </div>
+        </header>
+
+        <main>
+            <section class="admin-screen">
+                <div class="admin-tabs">
+                    <div class="tab active" data-tab="products">Product Management</div>
+                    <div class="tab" data-tab="users">User Management</div>
+                    <div class="tab" data-tab="invoices">Invoice Viewer</div>
+                </div>
+
+                <!-- Product Management Tab -->
+                <div class="tab-content active" id="products-tab">
+                    <h3>Product Management</h3>
+                    
+                    <div class="form-inline">
+                        <div class="form-group">
+                            <label for="product-name">Product Name:</label>
+                            <input type="text" id="product-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="product-sku">SKU:</label>
+                            <input type="text" id="product-sku" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="product-pack">Pack Size:</label>
+                            <input type="text" id="product-pack">
+                        </div>
+                        <div class="form-group">
+                            <label for="product-gst">GST Rate (%):</label>
+                            <input type="number" id="product-gst" step="0.01" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="product-purchase">Purchase Rate:</label>
+                            <input type="number" id="product-purchase" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label for="product-selling">Selling Rate:</label>
+                            <input type="number" id="product-selling" step="0.01" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="product-stock">Initial Stock:</label>
+                            <input type="number" id="product-stock" value="0">
+                        </div>
+                        <button id="add-product-btn" class="btn-primary">Add Product</button>
+                    </div>
+                    
+                    <div class="product-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>SKU</th>
+                                    <th>Pack Size</th>
+                                    <th>GST %</th>
+                                    <th>Purchase Rate</th>
+                                    <th>Selling Rate</th>
+                                    <th>Stock</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="products-body">
+                                <!-- Products will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- User Management Tab -->
+                <div class="tab-content" id="users-tab">
+                    <h3>User Management</h3>
+                    
+                    <div class="form-inline">
+                        <div class="form-group">
+                            <label for="new-username">Username:</label>
+                            <input type="text" id="new-username" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="new-password">Password:</label>
+                            <input type="password" id="new-password" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="new-role">Role:</label>
+                            <select id="new-role" required>
+                                <option value="Admin">Admin</option>
+                                <option value="Cashier">Cashier</option>
+                            </select>
+                        </div>
+                        <button id="add-user-btn" class="btn-primary">Add User</button>
+                    </div>
+                    
+                    <div class="user-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Username</th>
+                                    <th>Role</th>
+                                    <th>Created At</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="users-body">
+                                <!-- Users will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Invoice Viewer Tab -->
+                <div class="tab-content" id="invoices-tab">
+                    <h3>Invoice Viewer</h3>
+                    
+                    <div class="invoice-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Invoice Number</th>
+                                    <th>Date</th>
+                                    <th>Customer</th>
+                                    <th>Total Amount</th>
+                                    <th>Status</th>
+                                    <th>Created By</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="invoices-body">
+                                <!-- Invoices will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // Global variables
+        let currentUser = null;
+        let productsData = [];
+        let usersData = [];
+        let invoicesData = [];
+        
+        // DOM Elements
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const logoutBtn = document.getElementById('logout-btn');
+        const usernameSpan = document.getElementById('username');
+        
+        // Product elements
+        const productNameInput = document.getElementById('product-name');
+        const productSkuInput = document.getElementById('product-sku');
+        const productPackInput = document.getElementById('product-pack');
+        const productGstInput = document.getElementById('product-gst');
+        const productPurchaseInput = document.getElementById('product-purchase');
+        const productSellingInput = document.getElementById('product-selling');
+        const productStockInput = document.getElementById('product-stock');
+        const addProductBtn = document.getElementById('add-product-btn');
+        const productsBody = document.getElementById('products-body');
+        
+        // User elements
+        const newUsernameInput = document.getElementById('new-username');
+        const newPasswordInput = document.getElementById('new-password');
+        const newRoleSelect = document.getElementById('new-role');
+        const addUserBtn = document.getElementById('add-user-btn');
+        const usersBody = document.getElementById('users-body');
+        
+        // Invoice elements
+        const invoicesBody = document.getElementById('invoices-body');
+        
+        // Check if user is logged in
+        document.addEventListener('DOMContentLoaded', function() {
+            const token = localStorage.getItem('pos_token');
+            if (!token) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            // Verify token and get user info
+            fetch('/api/users/me', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error('Invalid token');
+                }
+            })
+            .then(user => {
+                currentUser = user;
+                usernameSpan.textContent = user.username;
+                
+                // Check if user is admin
+                if (user.role !== 'Admin') {
+                    alert('Access denied. Admin access required.');
+                    window.location.href = 'index.html';
+                    return;
+                }
+                
+                // Load initial data
+                loadProducts();
+                loadUsers();
+                loadInvoices();
+            })
+            .catch(error => {
+                console.error('Auth error:', error);
+                localStorage.removeItem('pos_token');
+                window.location.href = 'login.html';
+            });
+        });
+        
+        // Tab switching
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                const tabName = this.getAttribute('data-tab');
+                
+                // Update active tab
+                tabs.forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Show active content
+                tabContents.forEach(content => {
+                    content.classList.remove('active');
+                    if (content.id === `${tabName}-tab`) {
+                        content.classList.add('active');
+                    }
+                });
+            });
+        });
+        
+        // Load products
+        function loadProducts() {
+            const token = localStorage.getItem('pos_token');
+            
+            fetch('/api/products', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => response.json())
+            .then(products => {
+                productsData = products;
+                renderProducts();
+            })
+            .catch(error => {
+                console.error('Products load error:', error);
+                alert('Failed to load products');
+            });
+        }
+        
+        // Render products
+        function renderProducts() {
+            productsBody.innerHTML = '';
+            
+            productsData.forEach(product => {
+                // Convert string values to numbers for proper formatting
+                const gstRate = typeof product.gst_rate === 'string' ? parseFloat(product.gst_rate) : product.gst_rate;
+                const purchaseRate = product.purchase_rate ? 
+                    (typeof product.purchase_rate === 'string' ? parseFloat(product.purchase_rate) : product.purchase_rate) : null;
+                const sellingRate = typeof product.selling_rate === 'string' ? parseFloat(product.selling_rate) : product.selling_rate;
+                const stockQuantity = typeof product.stock_quantity === 'string' ? parseInt(product.stock_quantity) : product.stock_quantity;
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${product.name}</td>
+                    <td>${product.sku || '-'}</td>
+                    <td>${product.pack_size || '-'}</td>
+                    <td>${gstRate}%</td>
+                    <td>₹${purchaseRate ? purchaseRate.toFixed(2) : '-'}</td>
+                    <td>₹${sellingRate.toFixed(2)}</td>
+                    <td>${stockQuantity || 0}</td>
+                    <td>
+                        <button class="btn-secondary" onclick="editProduct(${product.product_id})">Edit</button>
+                        <button class="remove-btn" onclick="deleteProduct(${product.product_id})">Delete</button>
+                    </td>
+                `;
+                productsBody.appendChild(row);
+            });
+        }
+        
+        // Add product
+        addProductBtn.addEventListener('click', function() {
+            const token = localStorage.getItem('pos_token');
+            
+            // Validate inputs
+            if (!productNameInput.value || !productSkuInput.value || !productGstInput.value || !productSellingInput.value) {
+                alert('Please fill in all required fields');
+                return;
+            }
+            
+            const productData = {
+                name: productNameInput.value,
+                sku: productSkuInput.value,
+                pack_size: productPackInput.value,
+                gst_rate: parseFloat(productGstInput.value),
+                purchase_rate: productPurchaseInput.value ? parseFloat(productPurchaseInput.value) : null,
+                selling_rate: parseFloat(productSellingInput.value),
+                initial_stock: parseInt(productStockInput.value) || 0
+            };
+            
+            fetch('/api/products', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(productData)
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    return response.json().then(err => {
+                        throw new Error(err.message || 'Failed to add product');
+                    });
+                }
+            })
+            .then(product => {
+                alert('Product added successfully!');
+                loadProducts();
+                // Clear form
+                productNameInput.value = '';
+                productSkuInput.value = '';
+                productPackInput.value = '';
+                productGstInput.value = '';
+                productPurchaseInput.value = '';
+                productSellingInput.value = '';
+                productStockInput.value = '0';
+            })
+            .catch(error => {
+                console.error('Add product error:', error);
+                alert('Failed to add product: ' + error.message);
+            });
+        });
+        
+        // Edit product (placeholder)
+        function editProduct(productId) {
+            alert('Edit functionality would be implemented in a full version');
+        }
+        
+        // Delete product
+        function deleteProduct(productId) {
+            if (!confirm('Are you sure you want to delete this product?')) {
+                return;
+            }
+            
+            const token = localStorage.getItem('pos_token');
+            
+            fetch(`/api/products/${productId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert('Product deleted successfully!');
+                    loadProducts();
+                } else {
+                    throw new Error('Failed to delete product');
+                }
+            })
+            .catch(error => {
+                console.error('Delete product error:', error);
+                alert('Failed to delete product');
+            });
+        }
+        
+        // Load users
+        function loadUsers() {
+            const token = localStorage.getItem('pos_token');
+            
+            fetch('/api/admin/users', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => response.json())
+            .then(users => {
+                usersData = users;
+                renderUsers();
+            })
+            .catch(error => {
+                console.error('Users load error:', error);
+                alert('Failed to load users');
+            });
+        }
+        
+        // Render users
+        function renderUsers() {
+            usersBody.innerHTML = '';
+            
+            usersData.forEach(user => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${user.username}</td>
+                    <td>${user.role}</td>
+                    <td>${new Date(user.created_at).toLocaleDateString()}</td>
+                    <td>
+                        <button class="btn-secondary" onclick="resetPassword(${user.user_id})">Reset Password</button>
+                    </td>
+                `;
+                usersBody.appendChild(row);
+            });
+        }
+        
+        // Add user
+        addUserBtn.addEventListener('click', function() {
+            const token = localStorage.getItem('pos_token');
+            
+            const userData = {
+                username: newUsernameInput.value,
+                password: newPasswordInput.value,
+                role: newRoleSelect.value
+            };
+            
+            fetch('/api/admin/users', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(userData)
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert('User created successfully!');
+                    loadUsers();
+                    // Clear form
+                    newUsernameInput.value = '';
+                    newPasswordInput.value = '';
+                } else {
+                    throw new Error('Failed to create user');
+                }
+            })
+            .catch(error => {
+                console.error('Create user error:', error);
+                alert('Failed to create user');
+            });
+        });
+        
+        // Reset password (placeholder)
+        function resetPassword(userId) {
+            const newPassword = prompt('Enter new password:');
+            if (!newPassword) return;
+            
+            const token = localStorage.getItem('pos_token');
+            
+            fetch(`/api/admin/users/${userId}/reset-password`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ new_password: newPassword })
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert('Password reset successfully!');
+                } else {
+                    throw new Error('Failed to reset password');
+                }
+            })
+            .catch(error => {
+                console.error('Reset password error:', error);
+                alert('Failed to reset password');
+            });
+        }
+        
+        // Load invoices
+        function loadInvoices() {
+            const token = localStorage.getItem('pos_token');
+            
+            fetch('/api/admin/invoices', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => response.json())
+            .then(invoices => {
+                invoicesData = invoices;
+                renderInvoices();
+            })
+            .catch(error => {
+                console.error('Invoices load error:', error);
+                alert('Failed to load invoices');
+            });
+        }
+        
+        // Render invoices
+        function renderInvoices() {
+            invoicesBody.innerHTML = '';
+            
+            invoicesData.forEach(invoice => {
+                // Convert string values to numbers for proper formatting
+                const totalAmount = typeof invoice.total_amount === 'string' ? parseFloat(invoice.total_amount) : invoice.total_amount;
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${invoice.invoice_number}</td>
+                    <td>${new Date(invoice.invoice_date).toLocaleDateString()}</td>
+                    <td>${invoice.customer_name || '-'}</td>
+                    <td>₹${totalAmount.toFixed(2)}</td>
+                    <td>${invoice.status}</td>
+                    <td>${invoice.created_by}</td>
+                    <td>
+                        ${invoice.status === 'Completed' ? 
+                            `<button class="btn-secondary" onclick="cancelInvoice(${invoice.invoice_id})">Cancel</button>` : 
+                            '-'}
+                    </td>
+                `;
+                invoicesBody.appendChild(row);
+            });
+        }
+        
+        // Cancel invoice
+        function cancelInvoice(invoiceId) {
+            if (!confirm('Are you sure you want to cancel this invoice?')) {
+                return;
+            }
+            
+            const token = localStorage.getItem('pos_token');
+            
+            fetch(`/api/sales/${invoiceId}/cancel`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert('Invoice cancelled successfully!');
+                    loadInvoices();
+                } else {
+                    throw new Error('Failed to cancel invoice');
+                }
+            })
+            .catch(error => {
+                console.error('Cancel invoice error:', error);
+                alert('Failed to cancel invoice');
+            });
+        }
+        
+        // Logout functionality
+        logoutBtn.addEventListener('click', function() {
+            localStorage.removeItem('pos_token');
+            window.location.href = 'login.html';
+        });
+    </script>
+</body>
+</html>

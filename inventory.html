@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POS System - Inventory</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .inventory-screen {
+            background-color: white;
+            border-radius: 5px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .search-container {
+            margin-bottom: 20px;
+        }
+        
+        .low-stock {
+            background-color: #ffebee;
+            color: #c62828;
+            font-weight: bold;
+        }
+        
+        .inventory-actions {
+            margin: 20px 0;
+        }
+        
+        .form-inline {
+            display: flex;
+            gap: 10px;
+            align-items: end;
+        }
+        
+        .form-inline .form-group {
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Inventory Management</h1>
+            <div class="user-info">
+                <span id="username">Guest</span>
+                <button id="logout-btn">Logout</button>
+            </div>
+        </header>
+
+        <main>
+            <section class="inventory-screen">
+                <div class="search-container">
+                    <div class="form-group">
+                        <label for="inventory-search">Search Inventory:</label>
+                        <input type="text" id="inventory-search" placeholder="Search by product name or SKU...">
+                    </div>
+                </div>
+
+                <div class="inventory-actions">
+                    <button id="refresh-btn" class="btn-primary">Refresh Inventory</button>
+                </div>
+
+                <div class="inventory-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Product Name</th>
+                                <th>SKU</th>
+                                <th>Pack Size</th>
+                                <th>Current Stock</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventory-body">
+                            <!-- Inventory items will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // Global variables
+        let currentUser = null;
+        let inventoryData = [];
+        
+        // DOM Elements
+        const inventoryBody = document.getElementById('inventory-body');
+        const inventorySearch = document.getElementById('inventory-search');
+        const refreshBtn = document.getElementById('refresh-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+        const usernameSpan = document.getElementById('username');
+        
+        // Check if user is logged in
+        document.addEventListener('DOMContentLoaded', function() {
+            const token = localStorage.getItem('pos_token');
+            if (!token) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            // Verify token and get user info
+            fetch('/api/users/me', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error('Invalid token');
+                }
+            })
+            .then(user => {
+                currentUser = user;
+                usernameSpan.textContent = user.username;
+                loadInventory();
+            })
+            .catch(error => {
+                console.error('Auth error:', error);
+                localStorage.removeItem('pos_token');
+                window.location.href = 'login.html';
+            });
+        });
+        
+        // Load inventory data
+        function loadInventory() {
+            const token = localStorage.getItem('pos_token');
+            
+            fetch('/api/inventory', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => response.json())
+            .then(inventory => {
+                inventoryData = inventory;
+                renderInventory();
+            })
+            .catch(error => {
+                console.error('Inventory load error:', error);
+                alert('Failed to load inventory data');
+            });
+        }
+        
+        // Render inventory table
+        function renderInventory() {
+            inventoryBody.innerHTML = '';
+            
+            const searchTerm = inventorySearch.value.toLowerCase();
+            
+            const filteredInventory = inventoryData.filter(item => 
+                item.name.toLowerCase().includes(searchTerm) || 
+                (item.sku && item.sku.toLowerCase().includes(searchTerm))
+            );
+            
+            if (filteredInventory.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = '<td colspan="5" style="text-align: center;">No inventory items found</td>';
+                inventoryBody.appendChild(row);
+                return;
+            }
+            
+            filteredInventory.forEach(item => {
+                const row = document.createElement('tr');
+                
+                // Highlight low stock items
+                if (item.stock_quantity < 10) {
+                    row.classList.add('low-stock');
+                }
+                
+                row.innerHTML = `
+                    <td>${item.name}</td>
+                    <td>${item.sku || '-'}</td>
+                    <td>${item.pack_size || '-'}</td>
+                    <td>${item.stock_quantity}</td>
+                    <td>${item.stock_quantity < 10 ? 'Low Stock' : 'In Stock'}</td>
+                `;
+                
+                inventoryBody.appendChild(row);
+            });
+        }
+        
+        // Search functionality
+        inventorySearch.addEventListener('input', renderInventory);
+        
+        // Refresh button
+        refreshBtn.addEventListener('click', loadInventory);
+        
+        // Logout functionality
+        logoutBtn.addEventListener('click', function() {
+            localStorage.removeItem('pos_token');
+            window.location.href = 'login.html';
+        });
+    </script>
+</body>
+</html>

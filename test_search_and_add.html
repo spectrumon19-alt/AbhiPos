@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Search and Add Product</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        button {
+            padding: 10px 15px;
+            margin: 5px;
+            background-color: #007cba;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #005a87;
+        }
+        input, select {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+        }
+        #search-results {
+            border: 1px solid #ccc;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+        .search-result-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+        }
+        .search-result-item:hover {
+            background-color: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Search and Add Product</h1>
+    
+    <div class="test-section">
+        <h2>Product Search Test</h2>
+        <p>Enter a product name or SKU to search:</p>
+        <input type="text" id="product-search-input" placeholder="Type product name or SKU...">
+        <button id="search-btn">Search</button>
+        <div id="search-results"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Add Product Test</h2>
+        <p>Select a product from search results, then click "Add Product"</p>
+        <label>Quantity: <input type="number" id="quantity-input" min="1" value="1"></label>
+        <button id="add-item-btn">Add Product</button>
+        <div id="add-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Selected Product</h2>
+        <div id="selected-product"></div>
+    </div>
+    
+    <script src="sales.js"></script>
+    <script>
+        // Override some functions for testing
+        let testSelectedProduct = null;
+        let testInvoiceItems = [];
+        
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("Test page loaded");
+            
+            // Set up search button
+            document.getElementById('search-btn').addEventListener('click', function() {
+                const query = document.getElementById('product-search-input').value.trim();
+                if (query.length < 1) {
+                    alert('Please enter a search term');
+                    return;
+                }
+                
+                // Simulate search
+                simulateSearch(query);
+            });
+            
+            // Set up add item button
+            document.getElementById('add-item-btn').addEventListener('click', function() {
+                if (!testSelectedProduct) {
+                    alert('Please select a product first');
+                    return;
+                }
+                
+                const quantity = parseInt(document.getElementById('quantity-input').value) || 1;
+                addTestItem(testSelectedProduct, quantity);
+            });
+        });
+        
+        // Simulate product search
+        function simulateSearch(query) {
+            console.log("Simulating search for:", query);
+            
+            // Create mock search results (simulating API response with string values)
+            const mockResults = [
+                {
+                    "product_id": 1,
+                    "name": "Test Product A",
+                    "sku": "TPA-001",
+                    "pack_size": "1 kg",
+                    "gst_rate": "18.00",  // String from API
+                    "selling_rate": "100.00",  // String from API
+                    "purchase_rate": "80.00"
+                },
+                {
+                    "product_id": 2,
+                    "name": "Test Product B",
+                    "sku": "TPB-002",
+                    "pack_size": "500 g",
+                    "gst_rate": "12.00",  // String from API
+                    "selling_rate": "50.00",  // String from API
+                    "purchase_rate": "40.00"
+                }
+            ];
+            
+            // Filter results based on query
+            const filteredResults = mockResults.filter(product => 
+                product.name.toLowerCase().includes(query.toLowerCase()) || 
+                product.sku.toLowerCase().includes(query.toLowerCase())
+            );
+            
+            displayTestResults(filteredResults);
+        }
+        
+        // Display search results
+        function displayTestResults(results) {
+            const resultsDiv = document.getElementById('search-results');
+            resultsDiv.innerHTML = '';
+            
+            if (results.length === 0) {
+                resultsDiv.innerHTML = '<div class="search-result-item">No products found</div>';
+                return;
+            }
+            
+            results.forEach(product => {
+                const resultItem = document.createElement('div');
+                resultItem.className = 'search-result-item';
+                // Convert selling_rate to number for display
+                const sellingRate = typeof product.selling_rate === 'string' ? parseFloat(product.selling_rate) : product.selling_rate;
+                resultItem.textContent = `${product.name} (${product.sku}) - ₹${sellingRate.toFixed(2)}`;
+                resultItem.addEventListener('click', () => {
+                    selectTestProduct(product);
+                });
+                resultsDiv.appendChild(resultItem);
+            });
+        }
+        
+        // Select a product (simulates the selectProduct function)
+        function selectTestProduct(product) {
+            console.log("Product selected:", product);
+            testSelectedProduct = convertProductNumbers(product);  // Convert strings to numbers
+            
+            // Update UI
+            document.getElementById('product-search-input').value = product.name;
+            document.getElementById('search-results').innerHTML = '';
+            
+            // Display selected product
+            const selectedDiv = document.getElementById('selected-product');
+            selectedDiv.innerHTML = `
+                <h3>Selected Product:</h3>
+                <pre>${JSON.stringify(testSelectedProduct, null, 2)}</pre>
+                <p>Type checks:</p>
+                <ul>
+                    <li>gst_rate: ${typeof testSelectedProduct.gst_rate} (${testSelectedProduct.gst_rate})</li>
+                    <li>selling_rate: ${typeof testSelectedProduct.selling_rate} (${testSelectedProduct.selling_rate})</li>
+                </ul>
+            `;
+        }
+        
+        // Add item to invoice (simulates the add item functionality)
+        function addTestItem(product, quantity) {
+            const resultDiv = document.getElementById('add-result');
+            
+            try {
+                // Ensure product has proper numeric values
+                const productToAdd = convertProductNumbers(product);
+                
+                // Create item
+                const item = {
+                    product_id: productToAdd.product_id,
+                    name: productToAdd.name,
+                    pack_size: productToAdd.pack_size,
+                    gst_rate: productToAdd.gst_rate,  // Already converted to number
+                    selling_rate: productToAdd.selling_rate,  // Already converted to number
+                    quantity: quantity
+                };
+                
+                testInvoiceItems.push(item);
+                
+                resultDiv.innerHTML = `
+                    <p class="success">✓ Product added successfully!</p>
+                    <pre>${JSON.stringify(item, null, 2)}</pre>
+                    <p>Testing calculations:</p>
+                `;
+                
+                // Test calculations
+                const lineAmount = item.quantity * item.selling_rate;
+                const taxableValue = lineAmount / (1 + (item.gst_rate / 100));
+                const itemGst = lineAmount - taxableValue;
+                const sgst = itemGst / 2;
+                const cgst = itemGst / 2;
+                
+                resultDiv.innerHTML += `
+                    <ul>
+                        <li>Line Amount: ₹${lineAmount.toFixed(2)}</li>
+                        <li>Taxable Value: ₹${taxableValue.toFixed(2)}</li>
+                        <li>Total GST: ₹${itemGst.toFixed(2)}</li>
+                        <li>SGST: ₹${sgst.toFixed(2)}</li>
+                        <li>CGST: ₹${cgst.toFixed(2)}</li>
+                    </ul>
+                `;
+                
+                console.log("Item added:", item);
+            } catch (error) {
+                resultDiv.innerHTML = `<p class="error">✗ Error adding item: ${error.message}</p>`;
+                console.error("Add item error:", error);
+            }
+        }
+    </script>
+</body>
+</html>

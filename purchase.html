@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POS System - Purchase</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .purchase-screen {
+            background-color: white;
+            border-radius: 5px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .supplier-info {
+            margin-bottom: 20px;
+        }
+        
+        .product-search {
+            display: grid;
+            grid-template-columns: 3fr 1fr 1fr auto;
+            gap: 15px;
+            margin-bottom: 20px;
+            align-items: end;
+        }
+        
+        .search-results {
+            position: absolute;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            max-height: 200px;
+            overflow-y: auto;
+            width: calc(100% - 30px);
+            z-index: 100;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .search-result-item {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .search-result-item:hover {
+            background-color: #f0f0f0;
+        }
+        
+        .purchase-items {
+            margin-bottom: 20px;
+            overflow-x: auto;
+        }
+        
+        .purchase-actions {
+            display: flex;
+            gap: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Purchase Management</h1>
+            <div class="user-info">
+                <span id="username">Guest</span>
+                <button id="logout-btn">Logout</button>
+            </div>
+        </header>
+
+        <main>
+            <section class="purchase-screen">
+                <div class="supplier-info">
+                    <h2>Purchase Order</h2>
+                    <div class="form-group">
+                        <label for="supplier-name">Supplier Name:</label>
+                        <input type="text" id="supplier-name" placeholder="Required">
+                    </div>
+                    <div class="form-group">
+                        <label for="purchase-order">Purchase Order #:</label>
+                        <input type="text" id="purchase-order" placeholder="Required">
+                    </div>
+                    <div class="form-group">
+                        <label for="purchase-date">Purchase Date:</label>
+                        <input type="date" id="purchase-date">
+                    </div>
+                </div>
+
+                <div class="product-search">
+                    <div class="form-group">
+                        <label for="product-search-input">Search Product:</label>
+                        <input type="text" id="product-search-input" placeholder="Type product name or SKU...">
+                        <div id="search-results" class="search-results"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="quantity-input">Quantity:</label>
+                        <input type="number" id="quantity-input" min="1" value="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="purchase-rate">Purchase Rate:</label>
+                        <input type="number" id="purchase-rate" step="0.01" placeholder="Required">
+                    </div>
+                    <button id="add-item-btn" class="btn-primary">Add Item</button>
+                </div>
+
+                <div class="purchase-items">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>SL No</th>
+                                <th>Product</th>
+                                <th>Pack</th>
+                                <th>SKU</th>
+                                <th>Qty</th>
+                                <th>Purchase Rate</th>
+                                <th>Amount</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="purchase-items-body">
+                            <!-- Items will be added here dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="purchase-actions">
+                    <button id="receive-stock-btn" class="btn-success">Receive Stock</button>
+                    <button id="clear-btn" class="btn-secondary">Clear</button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // Global variables
+        let currentUser = null;
+        let purchaseItems = [];
+        let searchResults = [];
+        let currentSelectedProduct = null; // Move this to the top
+        
+        // DOM Elements
+        const productSearchInput = document.getElementById('product-search-input');
+        const searchResultsDiv = document.getElementById('search-results');
+        const quantityInput = document.getElementById('quantity-input');
+        const purchaseRateInput = document.getElementById('purchase-rate');
+        const addItemBtn = document.getElementById('add-item-btn');
+        const purchaseItemsBody = document.getElementById('purchase-items-body');
+        const supplierNameInput = document.getElementById('supplier-name');
+        const purchaseOrderInput = document.getElementById('purchase-order');
+        const purchaseDateInput = document.getElementById('purchase-date');
+        const receiveStockBtn = document.getElementById('receive-stock-btn');
+        const clearBtn = document.getElementById('clear-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+        const usernameSpan = document.getElementById('username');
+        
+        // Set today's date as default
+        document.addEventListener('DOMContentLoaded', function() {
+            const today = new Date().toISOString().split('T')[0];
+            purchaseDateInput.value = today;
+        });
+        
+        // Check if user is logged in
+        document.addEventListener('DOMContentLoaded', function() {
+            const token = localStorage.getItem('pos_token');
+            if (!token) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            // Verify token and get user info
+            fetch('/api/users/me', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error('Invalid token');
+                }
+            })
+            .then(user => {
+                currentUser = user;
+                usernameSpan.textContent = user.username;
+            })
+            .catch(error => {
+                console.error('Auth error:', error);
+                localStorage.removeItem('pos_token');
+                window.location.href = 'login.html';
+            });
+        });
+        
+        // Product search functionality
+        productSearchInput.addEventListener('input', function() {
+            const query = this.value.trim();
+            
+            if (query.length < 1) {
+                searchResultsDiv.innerHTML = '';
+                searchResults = [];
+                return;
+            }
+            
+            // In a real app, this would be an API call
+            // For demo purposes, we'll simulate with sample data
+            setTimeout(() => {
+                // Simulate API delay
+                searchProducts(query);
+            }, 300);
+        });
+        
+        function searchProducts(query) {
+            const token = localStorage.getItem('pos_token');
+            
+            fetch(`/api/products?q=${encodeURIComponent(query)}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => response.json())
+            .then(products => {
+                searchResults = products;
+                displaySearchResults();
+            })
+            .catch(error => {
+                console.error('Search error:', error);
+            });
+        }
+        
+        function displaySearchResults() {
+            if (searchResults.length === 0) {
+                searchResultsDiv.innerHTML = '<div class="search-result-item">No products found</div>';
+                return;
+            }
+            
+            searchResultsDiv.innerHTML = '';
+            
+            searchResults.forEach((product, index) => {
+                const resultItem = document.createElement('div');
+                resultItem.className = 'search-result-item';
+                resultItem.textContent = `${product.name} (${product.sku}) - ₹${product.selling_rate}`;
+                resultItem.addEventListener('click', () => {
+                    selectProduct(product);
+                });
+                searchResultsDiv.appendChild(resultItem);
+            });
+        }
+        
+        function selectProduct(product) {
+            // Set the selected product
+            currentSelectedProduct = product;
+            productSearchInput.value = product.name;
+            searchResultsDiv.innerHTML = '';
+            
+            // Pre-fill purchase rate if available
+            if (product.purchase_rate) {
+                purchaseRateInput.value = product.purchase_rate;
+            }
+        }
+        
+        // Add item to purchase
+        addItemBtn.addEventListener('click', function() {
+            if (!currentSelectedProduct) {
+                alert('Please select a product first');
+                return;
+            }
+            
+            const quantity = parseInt(quantityInput.value) || 1;
+            const purchaseRate = parseFloat(purchaseRateInput.value) || 0;
+            
+            if (purchaseRate <= 0) {
+                alert('Please enter a valid purchase rate');
+                return;
+            }
+            
+            // Check if product is already in purchase
+            const existingItemIndex = purchaseItems.findIndex(item => item.product_id === currentSelectedProduct.product_id);
+            
+            if (existingItemIndex >= 0) {
+                // Update quantity and rate if product already exists
+                purchaseItems[existingItemIndex].quantity += quantity;
+                purchaseItems[existingItemIndex].purchase_rate = purchaseRate;
+            } else {
+                // Add new item
+                const item = {
+                    product_id: currentSelectedProduct.product_id,
+                    name: currentSelectedProduct.name,
+                    pack_size: currentSelectedProduct.pack_size,
+                    sku: currentSelectedProduct.sku,
+                    quantity: quantity,
+                    purchase_rate: purchaseRate
+                };
+                purchaseItems.push(item);
+            }
+            
+            renderPurchaseItems();
+            clearProductSelection();
+        });
+        
+        function clearProductSelection() {
+            productSearchInput.value = '';
+            quantityInput.value = '1';
+            purchaseRateInput.value = '';
+            currentSelectedProduct = null;
+            searchResultsDiv.innerHTML = '';
+        }
+        
+        function renderPurchaseItems() {
+            purchaseItemsBody.innerHTML = '';
+            
+            purchaseItems.forEach((item, index) => {
+                // Calculate item amount
+                const amount = item.quantity * item.purchase_rate;
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${item.name}</td>
+                    <td>${item.pack_size || '-'}</td>
+                    <td>${item.sku || '-'}</td>
+                    <td>${item.quantity}</td>
+                    <td>₹${item.purchase_rate.toFixed(2)}</td>
+                    <td>₹${amount.toFixed(2)}</td>
+                    <td><button class="remove-btn" data-index="${index}">Remove</button></td>
+                `;
+                
+                purchaseItemsBody.appendChild(row);
+            });
+            
+            // Add event listeners to remove buttons
+            document.querySelectorAll('.remove-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const index = parseInt(this.getAttribute('data-index'));
+                    purchaseItems.splice(index, 1);
+                    renderPurchaseItems();
+                });
+            });
+        }
+        
+        // Receive stock functionality
+        receiveStockBtn.addEventListener('click', function() {
+            if (purchaseItems.length === 0) {
+                alert('Please add at least one item to the purchase order');
+                return;
+            }
+            
+            if (!supplierNameInput.value || !purchaseOrderInput.value) {
+                alert('Please fill in supplier name and purchase order number');
+                return;
+            }
+            
+            const token = localStorage.getItem('pos_token');
+            
+            // For each item, update the inventory
+            const updatePromises = purchaseItems.map(item => {
+                return fetch('/api/inventory/update', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        product_id: item.product_id,
+                        quantity_change: item.quantity
+                    })
+                });
+            });
+            
+            Promise.all(updatePromises)
+                .then(responses => {
+                    // Check if all requests were successful
+                    const allSuccessful = responses.every(response => response.ok);
+                    if (allSuccessful) {
+                        alert('Stock received successfully!');
+                        clearPurchase();
+                    } else {
+                        throw new Error('Failed to update some items');
+                    }
+                })
+                .catch(error => {
+                    console.error('Receive stock error:', error);
+                    alert('Failed to receive stock. Please try again.');
+                });
+        });
+        
+        function clearPurchase() {
+            purchaseItems = [];
+            renderPurchaseItems();
+            supplierNameInput.value = '';
+            purchaseOrderInput.value = '';
+            const today = new Date().toISOString().split('T')[0];
+            purchaseDateInput.value = today;
+            clearProductSelection();
+        }
+        
+        // Clear button
+        clearBtn.addEventListener('click', clearPurchase);
+        
+        // Logout functionality
+        logoutBtn.addEventListener('click', function() {
+            localStorage.removeItem('pos_token');
+            window.location.href = 'login.html';
+        });
+        
+        // Close search results when clicking elsewhere
+        document.addEventListener('click', function(event) {
+            if (!productSearchInput.contains(event.target) && !searchResultsDiv.contains(event.target)) {
+                searchResultsDiv.innerHTML = '';
+            }
+        });
+    </script>
+</body>
+</html>

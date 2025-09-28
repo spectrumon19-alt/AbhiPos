@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Sales.js Fix</title>
+</head>
+<body>
+    <h1>Testing Sales.js Fix</h1>
+    <p>Check the browser console for test results.</p>
+    
+    <!-- Include the sales.js file -->
+    <script src="sales.js"></script>
+    
+    <script>
+        // Test the convertProductNumbers function
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("Testing convertProductNumbers function...");
+            
+            // Mock API data with string values
+            const mockProduct = {
+                "product_id": 1,
+                "name": "Test Product",
+                "sku": "TP-001",
+                "pack_size": "1 kg",
+                "gst_rate": "18.00",  // String from API
+                "selling_rate": "100.00",  // String from API
+                "purchase_rate": "80.00"
+            };
+            
+            console.log("Original product data:", mockProduct);
+            
+            // Test the convertProductNumbers function
+            const convertedProduct = convertProductNumbers(mockProduct);
+            console.log("Converted product data:", convertedProduct);
+            
+            // Check types
+            console.log("Type checks:");
+            console.log("- gst_rate:", typeof convertedProduct.gst_rate, convertedProduct.gst_rate);
+            console.log("- selling_rate:", typeof convertedProduct.selling_rate, convertedProduct.selling_rate);
+            
+            // Test calculations
+            const quantity = 2;
+            const lineAmount = quantity * convertedProduct.selling_rate;
+            const taxableValue = lineAmount / (1 + (convertedProduct.gst_rate / 100));
+            const itemGst = lineAmount - taxableValue;
+            const sgst = itemGst / 2;
+            const cgst = itemGst / 2;
+            
+            console.log("Calculations:");
+            console.log("- Line Amount:", lineAmount);
+            console.log("- Taxable Value:", taxableValue);
+            console.log("- Total GST:", itemGst);
+            console.log("- SGST:", sgst);
+            console.log("- CGST:", cgst);
+            
+            console.log("Test completed successfully!");
+            
+            // Test the selectProduct function
+            console.log("Testing selectProduct function...");
+            // This would normally set currentSelectedProduct, but we can't fully test without DOM
+            
+            console.log("All tests completed!");
+        });
+    </script>
+</body>
+</html>

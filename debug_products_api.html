@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Product API</title>
+</head>
+<body>
+    <h1>Product API Debug Tool</h1>
+    <button id="test-api-btn">Test Product API</button>
+    <div id="result"></div>
+    
+    <script>
+        document.getElementById('test-api-btn').addEventListener('click', function() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Testing...';
+            
+            // Get token from localStorage
+            const token = localStorage.getItem('pos_token');
+            if (!token) {
+                resultDiv.innerHTML = '<span style="color: red;">No authentication token found. Please log in first.</span>';
+                return;
+            }
+            
+            // Test the products API
+            fetch('/api/products', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(products => {
+                resultDiv.innerHTML = `
+                    <h2>API Response:</h2>
+                    <p>Found ${products.length} products</p>
+                    <pre>${JSON.stringify(products, null, 2)}</pre>
+                `;
+            })
+            .catch(error => {
+                resultDiv.innerHTML = `
+                    <h2>Error:</h2>
+                    <p style="color: red;">${error.message}</p>
+                    <p>Check browser console for more details.</p>
+                `;
+                console.error('API Test Error:', error);
+            });
+        });
+    </script>
+</body>
+</html>

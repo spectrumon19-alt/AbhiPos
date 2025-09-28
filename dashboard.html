@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POS System - Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .dashboard {
+            background-color: white;
+            border-radius: 5px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .dashboard-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .dashboard-header h1 {
+            color: #2c3e50;
+        }
+        
+        .nav-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .nav-card {
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 1px solid #ddd;
+        }
+        
+        .nav-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border-color: #3498db;
+        }
+        
+        .nav-card h3 {
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+        
+        .nav-card p {
+            margin-bottom: 20px;
+            color: #7f8c8d;
+        }
+        
+        .nav-card .btn-primary {
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>POS System Dashboard</h1>
+            <div class="user-info">
+                <span id="username">Guest</span>
+                <button id="logout-btn">Logout</button>
+            </div>
+        </header>
+
+        <main>
+            <section class="dashboard">
+                <div class="dashboard-header">
+                    <h1>Welcome to Point of Sale System</h1>
+                    <p>Select an option below to get started</p>
+                </div>
+                
+                <div class="nav-grid">
+                    <div class="nav-card">
+                        <h3>Sales</h3>
+                        <p>Process sales transactions and generate invoices</p>
+                        <button class="btn-primary" onclick="window.location.href='index.html'">Go to Sales</button>
+                    </div>
+                    
+                    <div class="nav-card">
+                        <h3>Purchase</h3>
+                        <p>Record incoming stock from suppliers</p>
+                        <button class="btn-primary" onclick="window.location.href='purchase.html'">Go to Purchase</button>
+                    </div>
+                    
+                    <div class="nav-card">
+                        <h3>Inventory</h3>
+                        <p>View and manage product inventory</p>
+                        <button class="btn-primary" onclick="window.location.href='inventory.html'">View Inventory</button>
+                    </div>
+                    
+                    <div class="nav-card">
+                        <h3>Reports</h3>
+                        <p>Generate sales and performance reports</p>
+                        <button class="btn-primary" onclick="window.location.href='reports.html'">View Reports</button>
+                    </div>
+                    
+                    <div class="nav-card">
+                        <h3>Admin Panel</h3>
+                        <p>Manage products, users, and system settings</p>
+                        <button class="btn-primary" onclick="window.location.href='admin.html'">Admin Panel</button>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // Global variables
+        let currentUser = null;
+        
+        // DOM Elements
+        const logoutBtn = document.getElementById('logout-btn');
+        const usernameSpan = document.getElementById('username');
+        
+        // Check if user is logged in
+        document.addEventListener('DOMContentLoaded', function() {
+            const token = localStorage.getItem('pos_token');
+            if (!token) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            // Verify token and get user info
+            fetch('/api/users/me', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error('Invalid token');
+                }
+            })
+            .then(user => {
+                currentUser = user;
+                usernameSpan.textContent = user.username;
+                
+                // If user is admin, show admin panel card
+                if (user.role === 'Admin') {
+                    document.querySelector('.nav-grid').innerHTML += `
+                        <div class="nav-card">
+                            <h3>Admin Panel</h3>
+                            <p>Manage products, users, and system settings</p>
+                            <button class="btn-primary" onclick="window.location.href='admin.html'">Admin Panel</button>
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('Auth error:', error);
+                localStorage.removeItem('pos_token');
+                window.location.href = 'login.html';
+            });
+        });
+        
+        // Logout functionality
+        logoutBtn.addEventListener('click', function() {
+            localStorage.removeItem('pos_token');
+            window.location.href = 'login.html';
+        });
+    </script>
+</body>
+</html>

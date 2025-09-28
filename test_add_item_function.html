@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Item Function Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        button {
+            padding: 10px 15px;
+            margin: 5px;
+            background-color: #007cba;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #005a87;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Add Item Function Test</h1>
+    
+    <div class="test-section">
+        <h2>Test 1: Manual Function Test</h2>
+        <p>This test simulates the exact steps the Add Item function should perform.</p>
+        <button id="run-manual-test">Run Manual Test</button>
+        <div id="manual-test-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test 2: Event Listener Test</h2>
+        <p>This test verifies that event listeners are properly attached.</p>
+        <button id="run-event-test">Run Event Listener Test</button>
+        <div id="event-test-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test 3: Complete Flow Test</h2>
+        <p>This test simulates the complete flow from product selection to adding an item.</p>
+        <button id="run-flow-test">Run Complete Flow Test</button>
+        <div id="flow-test-result"></div>
+    </div>
+    
+    <script>
+        // Test data
+        const testProduct = {
+            product_id: 1,
+            name: "Test Product",
+            pack_size: "1 kg",
+            gst_rate: 18.00,
+            selling_rate: 100.00
+        };
+        
+        let testInvoiceItems = [];
+        let testCurrentSelectedProduct = null;
+        
+        // Test 1: Manual Function Test
+        document.getElementById('run-manual-test').addEventListener('click', function() {
+            const resultDiv = document.getElementById('manual-test-result');
+            resultDiv.innerHTML = '<p>Running test...</p>';
+            
+            try {
+                // Step 1: Select product
+                testCurrentSelectedProduct = testProduct;
+                resultDiv.innerHTML += '<p class="info">Step 1: Product selected</p>';
+                
+                // Step 2: Add item to invoice
+                if (!testCurrentSelectedProduct) {
+                    throw new Error("No product selected");
+                }
+                
+                const quantity = 1;
+                const existingItemIndex = testInvoiceItems.findIndex(item => item.product_id === testCurrentSelectedProduct.product_id);
+                
+                if (existingItemIndex >= 0) {
+                    testInvoiceItems[existingItemIndex].quantity += quantity;
+                    resultDiv.innerHTML += '<p class="info">Step 2: Updated existing item quantity</p>';
+                } else {
+                    const item = {
+                        product_id: testCurrentSelectedProduct.product_id,
+                        name: testCurrentSelectedProduct.name,
+                        pack_size: testCurrentSelectedProduct.pack_size,
+                        gst_rate: testCurrentSelectedProduct.gst_rate,
+                        selling_rate: testCurrentSelectedProduct.selling_rate,
+                        quantity: quantity
+                    };
+                    testInvoiceItems.push(item);
+                    resultDiv.innerHTML += '<p class="success">Step 2: New item added successfully</p>';
+                }
+                
+                // Step 3: Verify item was added
+                if (testInvoiceItems.length > 0) {
+                    resultDiv.innerHTML += `
+                        <p class="success">Step 3: Item successfully added to invoice</p>
+                        <pre>${JSON.stringify(testInvoiceItems[0], null, 2)}</pre>
+                    `;
+                } else {
+                    throw new Error("Item was not added to invoice");
+                }
+                
+                // Clean up
+                testInvoiceItems = [];
+                testCurrentSelectedProduct = null;
+                
+            } catch (error) {
+                resultDiv.innerHTML += `<p class="error">Error: ${error.message}</p>`;
+                console.error('Test error:', error);
+            }
+        });
+        
+        // Test 2: Event Listener Test
+        document.getElementById('run-event-test').addEventListener('click', function() {
+            const resultDiv = document.getElementById('event-test-result');
+            resultDiv.innerHTML = '<p>Running test...</p>';
+            
+            // Create test elements
+            const testButton = document.createElement('button');
+            testButton.id = 'test-add-item-btn';
+            testButton.textContent = 'Test Add Item';
+            
+            const testInput = document.createElement('input');
+            testInput.id = 'test-quantity-input';
+            testInput.type = 'number';
+            testInput.value = '1';
+            
+            // Add to body temporarily
+            document.body.appendChild(testButton);
+            document.body.appendChild(testInput);
+            
+            try {
+                // Test attaching event listener
+                let eventFired = false;
+                testButton.addEventListener('click', function() {
+                    eventFired = true;
+                });
+                
+                // Simulate click
+                testButton.click();
+                
+                if (eventFired) {
+                    resultDiv.innerHTML = '<p class="success">✓ Event listener attached and working correctly</p>';
+                } else {
+                    resultDiv.innerHTML = '<p class="error">✗ Event listener not working</p>';
+                }
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+                console.error('Event test error:', error);
+            } finally {
+                // Clean up
+                document.body.removeChild(testButton);
+                document.body.removeChild(testInput);
+            }
+        });
+        
+        // Test 3: Complete Flow Test
+        document.getElementById('run-flow-test').addEventListener('click', function() {
+            const resultDiv = document.getElementById('flow-test-result');
+            resultDiv.innerHTML = '<p>Running test...</p>';
+            
+            try {
+                // Step 1: Simulate product search
+                resultDiv.innerHTML += '<p class="info">Step 1: Simulating product search</p>';
+                const searchResults = [testProduct];
+                
+                // Step 2: Simulate product selection
+                resultDiv.innerHTML += '<p class="info">Step 2: Simulating product selection</p>';
+                testCurrentSelectedProduct = searchResults[0];
+                
+                // Step 3: Simulate adding item
+                resultDiv.innerHTML += '<p class="info">Step 3: Simulating add item</p>';
+                if (!testCurrentSelectedProduct) {
+                    throw new Error("No product selected");
+                }
+                
+                const quantity = 2;
+                const existingItemIndex = testInvoiceItems.findIndex(item => item.product_id === testCurrentSelectedProduct.product_id);
+                
+                if (existingItemIndex >= 0) {
+                    testInvoiceItems[existingItemIndex].quantity += quantity;
+                } else {
+                    const item = {
+                        product_id: testCurrentSelectedProduct.product_id,
+                        name: testCurrentSelectedProduct.name,
+                        pack_size: testCurrentSelectedProduct.pack_size,
+                        gst_rate: testCurrentSelectedProduct.gst_rate,
+                        selling_rate: testCurrentSelectedProduct.selling_rate,
+                        quantity: quantity
+                    };
+                    testInvoiceItems.push(item);
+                }
+                
+                // Step 4: Verify results
+                if (testInvoiceItems.length > 0 && testInvoiceItems[0].quantity === 2) {
+                    resultDiv.innerHTML += `
+                        <p class="success">Step 4: Complete flow successful!</p>
+                        <pre>${JSON.stringify(testInvoiceItems[0], null, 2)}</pre>
+                    `;
+                } else {
+                    throw new Error("Complete flow failed");
+                }
+                
+                // Clean up
+                testInvoiceItems = [];
+                testCurrentSelectedProduct = null;
+                
+            } catch (error) {
+                resultDiv.innerHTML += `<p class="error">Error: ${error.message}</p>`;
+                console.error('Flow test error:', error);
+            }
+        });
+    </script>
+</body>
+</html>
